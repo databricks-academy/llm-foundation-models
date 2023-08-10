@@ -1,6 +1,8 @@
 ## Large Language Models: Foundation Models from the Ground Up
 
 This repo contains the notebooks and slides for the [Large Language Models: Foundation Models from the Ground Up](https://www.edx.org/learn/computer-programming/databricks-large-language-models-foundation-models-from-the-ground-up) course on [edX](https://www.edx.org/professional-certificate/databricks-large-language-models) & Databricks Academy.
+
+Note: this is the second course in the two-part series. For the first installment please see the course on [edX](https://www.edx.org/professional-certificate/databricks-large-language-models) & Databricks Academy as well as the supporting [repo](https://github.com/databricks-academy/large-language-models).
  
 <details>
 <summary> Notebooks</summary>
