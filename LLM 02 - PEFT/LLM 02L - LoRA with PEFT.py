@@ -1,5 +1,4 @@
 # Databricks notebook source
-# MAGIC
 # MAGIC %md-sandbox
 # MAGIC
 # MAGIC <div style="text-align: center; line-height: 0; padding-top: 9px;">
@@ -26,6 +25,10 @@
 
 # COMMAND ----------
 
+# MAGIC %run ../Includes/Classroom-Setup
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC We will re-use the same dataset and model from the demo notebook. 
 
@@ -35,10 +38,10 @@ from datasets import load_dataset
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 model_name = "bigscience/bloomz-560m"
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-foundation_model = AutoModelForCausalLM.from_pretrained(model_name)
+tokenizer = AutoTokenizer.from_pretrained(model_name, cache_dir=DA.paths.datasets)
+foundation_model = AutoModelForCausalLM.from_pretrained(model_name, cache_dir=DA.paths.datasets)
 
-data = load_dataset("Abirate/english_quotes")
+data = load_dataset("Abirate/english_quotes", cache_dir=DA.paths.datasets)
 data = data.map(lambda samples: tokenizer(samples["quote"]), batched=True)
 train_sample = data["train"].select(range(50))
 display(train_sample) 
@@ -73,10 +76,6 @@ display(train_sample)
 # MAGIC     - `value`, `v` , `v_proj` 
 # MAGIC     - `query_key_value` 
 # MAGIC   - The easiest way to inspect the module/layer names is to print the model, like we are doing below.
-
-# COMMAND ----------
-
-foundation_model
 
 # COMMAND ----------
 
@@ -150,9 +149,11 @@ dbTestQuestion2_2(peft_model)
 # TODO
 import transformers
 from transformers import TrainingArguments, Trainer
+import os
 
+output_directory = os.path.join(DA.paths.working_dir, "peft_lab_outputs")
 training_args = TrainingArguments(
-    output_dir="outputs",
+    output_dir=output_directory,
     auto_find_batch_size=True,
     learning_rate= 3e-2, # Higher learning rate than full fine-tuning.
     num_train_epochs=5,
@@ -187,11 +188,14 @@ dbTestQuestion2_3(trainer)
 
 # COMMAND ----------
 
+import time
+
+time_now = time.time()
+
 username = spark.sql("SELECT CURRENT_USER").first()[0]
-peft_model_path= f"/dbfs/Users/{username}/tmp/lora"
+peft_model_path = os.path.join(output_directory, f"peft_model_{time_now}")
 
 trainer.model.save_pretrained(peft_model_path)
-display(dbutils.fs.ls(peft_model_path.replace("/dbfs/", "dbfs:/")))
 
 # COMMAND ----------
 
@@ -225,10 +229,10 @@ dbTestQuestion2_4(loaded_model)
 # TODO
 inputs = tokenizer("Two things are infinite: ", return_tensors="pt")
 outputs = peft_model.generate(
-        input_ids=<FILL_IN>, 
-        attention_mask=<FILL_IN>, 
-        max_new_tokens=<FILL_IN>, 
-        eos_token_id=tokenizer.eos_id
+    input_ids=<FILL_IN>, 
+    attention_mask=<FILL_IN>, 
+    max_new_tokens=<FILL_IN>, 
+    eos_token_id=tokenizer.eos_id
     )
 print(tokenizer.batch_decode(<FILL_IN>, skip_special_tokens=True))
 

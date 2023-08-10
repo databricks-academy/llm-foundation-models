@@ -10,6 +10,8 @@ DA.init()                                           # Performs basic intializati
 DA.paths.working_dir = DA.paths.to_vm_path(DA.paths.working_dir)
 DA.paths.datasets = DA.paths.to_vm_path(DA.paths.datasets)
 
+DA.init_mlflow_as_job()
+
 # COMMAND ----------
 
 # MAGIC %run ./Test-Framework

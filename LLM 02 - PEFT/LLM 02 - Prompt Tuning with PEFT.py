@@ -1,5 +1,4 @@
 # Databricks notebook source
-# MAGIC
 # MAGIC %md-sandbox
 # MAGIC
 # MAGIC <div style="text-align: center; line-height: 0; padding-top: 9px;">
@@ -49,20 +48,37 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 model_name = "bigscience/bloomz-560m"
 
-tokenizer = AutoTokenizer.from_pretrained(model_name)
+tokenizer = AutoTokenizer.from_pretrained(model_name, cache_dir=DA.paths.datasets)
 
-foundation_model = AutoModelForCausalLM.from_pretrained(model_name)
+foundation_model = AutoModelForCausalLM.from_pretrained(model_name, cache_dir=DA.paths.datasets)
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC However, the dataset above doesn't cover anything about inspirational English quotes. Therefore, we are going to fine-tune `bloomz-560m` on [a dataset called `Abirate/english_quotes`](https://huggingface.co/datasets/Abirate/english_quotes)  containing exclusively inspirational English quotes, with the hopes of using the fine-tuned version to generate more quotes later! 
+# MAGIC Before doing any fine-tuning, we will ask the model to generate a new phrase to the following input sentence. 
+
+# COMMAND ----------
+
+input1 = tokenizer("Two things are infinite: ", return_tensors="pt")
+
+foundation_outputs = foundation_model.generate(
+    input_ids=input1["input_ids"], 
+    attention_mask=input1["attention_mask"], 
+    max_new_tokens=7, 
+    eos_token_id=tokenizer.eos_token_id
+    )
+print(tokenizer.batch_decode(foundation_outputs, skip_special_tokens=True))
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC The output is not too bad. However, the dataset BLOOMZ is pre-trained on doesn't cover anything about inspirational English quotes. Therefore, we are going to fine-tune `bloomz-560m` on [a dataset called `Abirate/english_quotes`](https://huggingface.co/datasets/Abirate/english_quotes)  containing exclusively inspirational English quotes, with the hopes of using the fine-tuned version to generate more quotes later! 
 
 # COMMAND ----------
 
 from datasets import load_dataset
 
-data = load_dataset("Abirate/english_quotes")
+data = load_dataset("Abirate/english_quotes", cache_dir=DA.paths.datasets)
 
 data = data.map(lambda samples: tokenizer(samples["quote"]), batched=True)
 train_sample = data["train"].select(range(50))
@@ -102,9 +118,11 @@ print(peft_model.print_trainable_parameters())
 # COMMAND ----------
 
 from transformers import TrainingArguments
+import os
 
+output_directory = os.path.join(DA.paths.working_dir, "peft_outputs")
 training_args = TrainingArguments(
-    output_dir="outputs", # Where the model predictions and checkpoints will be written
+    output_dir=output_directory, # Where the model predictions and checkpoints will be written
     no_cuda=True, # This is necessary for CPU clusters. 
     auto_find_batch_size=True, # Find a suitable batch size that will fit into memory automatically 
     learning_rate= 3e-2, # Higher learning rate than full fine-tuning
@@ -120,7 +138,7 @@ training_args = TrainingArguments(
 # MAGIC
 # MAGIC Specifically, we will be using `DataCollatorforLanguageModeling` which will additionally pad the inputs to the maximum length of a batch since the inputs can have variable lengths. Refer to [API docs here](https://huggingface.co/docs/transformers/main/en/main_classes/data_collator#transformers.DataCollatorForLanguageModeling).
 # MAGIC
-# MAGIC Note: This will take roughly 10 mins to complete training.
+# MAGIC Note: This cell might take ~10 mins to train. On another hand, you might notice that this cells triggers a whole new MLflow run. [MLflow](https://mlflow.org/docs/latest/index.html) is an open source tool that helps to manage end-to-end machine learning lifecycle, including experiment tracking, ML code packaging, and model deployment. You can read more about [LLM tracking here](https://mlflow.org/docs/latest/llm-tracking.html).
 
 # COMMAND ----------
 
@@ -130,7 +148,7 @@ trainer = Trainer(
     model=peft_model, # We pass in the PEFT version of the foundation model, bloomz-560M
     args=training_args,
     train_dataset=train_sample,
-    data_collator=DataCollatorForLanguageModeling(tokenizer, mlm=False)
+    data_collator=DataCollatorForLanguageModeling(tokenizer, mlm=False) # mlm=False indicates not to use masked language modeling
 )
 
 trainer.train()
@@ -143,22 +161,113 @@ trainer.train()
 # COMMAND ----------
 
 import time
+
 time_now = time.time()
-
-user_directory = f"dbfs:/Users/{DA.username}/tmp"
-dbutils.fs.mkdirs(user_directory)
-peft_model_path= f"{user_directory}/cpu-bloom-random-prompt-tuning-{time_now}"
-
-trainer.model.save_pretrained(peft_model_path.replace("dbfs:/", "/dbfs/"))
-
-# COMMAND ----------
-
-display(dbutils.fs.ls(peft_model_path))
+peft_model_path = os.path.join(output_directory, f"peft_model_{time_now}")
+trainer.model.save_pretrained(peft_model_path)
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Share model (Optional)
+# MAGIC ## Inference
+# MAGIC
+# MAGIC You can load the model from the path that you have saved to before, and ask the model to generate text based on our input before! 
+
+# COMMAND ----------
+
+from peft import PeftModel
+
+loaded_model = PeftModel.from_pretrained(foundation_model, 
+                                         peft_model_path, 
+                                         is_trainable=False)
+
+# COMMAND ----------
+
+loaded_model_outputs = loaded_model.generate(
+    input_ids=input1["input_ids"], 
+    attention_mask=input1["attention_mask"], 
+    max_new_tokens=7, 
+    eos_token_id=tokenizer.eos_token_id
+    )
+print(tokenizer.batch_decode(loaded_model_outputs, skip_special_tokens=True))
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC Well, it seems like our fine-tuned model is indeed getting closer to generating inspirational quotes. 
+# MAGIC
+# MAGIC
+# MAGIC In fact, the input above is taken from the training dataset. 
+# MAGIC <br>
+# MAGIC <br>
+# MAGIC
+# MAGIC <img src="https://files.training.databricks.com/images/llm/english_quote_example.png" width=500>
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Text initialization
+# MAGIC
+# MAGIC Our fine-tuned, randomly initialized model did pretty well on the quote above. Let's now compare it with the text initialization method. 
+# MAGIC
+# MAGIC Notice that all we are changing is the `prompt_tuning_init` setting and we are also providing a concise text prompt. 
+# MAGIC
+# MAGIC API docs
+# MAGIC * [prompt_tuning_init_text](https://huggingface.co/docs/peft/main/en/package_reference/tuners#peft.PromptTuningConfig.prompt_tuning_init_text)
+
+# COMMAND ----------
+
+text_peft_config = PromptTuningConfig(
+    task_type=TaskType.CAUSAL_LM,
+    prompt_tuning_init=PromptTuningInit.TEXT,
+    prompt_tuning_init_text="Generate inspirational quotes", # this provides a starter for the model to start searching for the best embeddings
+    num_virtual_tokens=3, # this doesn't have to match the length of the text above
+    tokenizer_name_or_path=model_name
+)
+text_peft_model = get_peft_model(foundation_model, text_peft_config)
+print(text_peft_model.print_trainable_parameters())
+
+# COMMAND ----------
+
+text_trainer = Trainer(
+    model=text_peft_model,
+    args=training_args,
+    train_dataset=train_sample,
+    data_collator=DataCollatorForLanguageModeling(tokenizer, mlm=False)
+)
+
+text_trainer.train()
+
+# COMMAND ----------
+
+# Save the model
+time_now = time.time()
+text_peft_model_path = os.path.join(output_directory, f"text_peft_model_{time_now}")
+text_trainer.model.save_pretrained(text_peft_model_path)
+
+# Load model 
+loaded_text_model = PeftModel.from_pretrained(foundation_model, 
+                                             text_peft_model_path, 
+                                             is_trainable=False)
+# Generate output
+text_outputs = text_peft_model.generate(
+    input_ids=input1["input_ids"], 
+    attention_mask=input1["attention_mask"], 
+    max_new_tokens=7, 
+    eos_token_id=tokenizer.eos_token_id
+        )
+    
+print(tokenizer.batch_decode(text_outputs, skip_special_tokens=True))
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC You can see that text initialization doesn't necessarily perform better than random initialization. 
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Share model to HuggingFace hub (optional)
 # MAGIC
 # MAGIC If you have a model that you would like to share with the rest of the HuggingFace community, you can choose to push your model to the HuggingFace hub! 
 # MAGIC
@@ -180,11 +289,22 @@ display(dbutils.fs.ls(peft_model_path))
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC This login cell below will prompt you to enter your token
+# MAGIC Here, we use Databricks Secrets management tool to save your secrets to a secret scope on Databricks. For more documentation on how to manage secrets on Databricks, visit this page on [secret management](https://docs.databricks.com/en/security/secrets/index.html).
 
 # COMMAND ----------
 
-# TODO 
+from huggingface_hub import login
+
+os.environ["huggingface_key"] = dbutils.secrets.get("llm_scope", "huggingface_key")
+hf_token = os.environ["huggingface_key"]
+login(token=hf_token)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC Alternatively, you can use HuggingFace's helper login method. This login cell below will prompt you to enter your token
+
+# COMMAND ----------
 
 from huggingface_hub import notebook_login
 
@@ -194,135 +314,37 @@ notebook_login()
 
 # TODO
 hf_username = <FILL_IN_WITH_YOUR_HUGGINGFACE_USERNAME>
-peft_model_id = f"{hf_username}/cpu_bloom_prompt_tuning_{time_now}"
+peft_model_id = f"{hf_username}/bloom_prompt_tuning_{time_now}"
 trainer.model.push_to_hub(peft_model_id, use_auth_token=True)
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Inference
-# MAGIC
-# MAGIC If you didn't push the model to HuggingFace hub, you can just load the model from the path that you have saved to before. 
+# MAGIC ### Inference from model in HuggingFace hub
 
 # COMMAND ----------
 
 from peft import PeftModel, PeftConfig
 
-local = False 
-if local: 
-    loaded_model = PeftModel.from_pretrained(foundation_model, 
-                                             peft_model_path, 
-                                             is_trainable=False)
-else:
-    config = PeftConfig.from_pretrained(peft_model_id)
-    foundation_model = AutoModelForCausalLM.from_pretrained(peft_config.base_model_name_or_path)
-    peft_random_model = PeftModel.from_pretrained(foundation_model, peft_model_id)
+config = PeftConfig.from_pretrained(peft_model_id)
+foundation_model = AutoModelForCausalLM.from_pretrained(peft_config.base_model_name_or_path)
+peft_random_model = PeftModel.from_pretrained(foundation_model, peft_model_id)
 
 # COMMAND ----------
 
-input1 = tokenizer("Two things are infinite: ", return_tensors="pt")
-
-outputs = peft_random_model.generate(
+online_model_outputs = peft_random_model.generate(
     input_ids=input1["input_ids"], 
     attention_mask=input1["attention_mask"], 
     max_new_tokens=7, 
     eos_token_id=tokenizer.eos_token_id
     )
     
-print(tokenizer.batch_decode(outputs, skip_special_tokens=True))
+print(tokenizer.batch_decode(online_model_outputs, skip_special_tokens=True))
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC
-# MAGIC The input above is taken from the training dataset. How similar is the output to what Albert Einstein said?
-# MAGIC <br>
-# MAGIC <br>
-# MAGIC
-# MAGIC <img src="https://files.training.databricks.com/images/llm/english_quote_example.png" width=500>
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ## Compare with foundation model output
-
-# COMMAND ----------
-
-foundation_outputs = foundation_model.generate(
-    input_ids=input1["input_ids"], 
-    attention_mask=input1["attention_mask"], 
-    max_new_tokens=7, 
-    eos_token_id=tokenizer.eos_token_id
-    )
-print(tokenizer.batch_decode(foundation_outputs, skip_special_tokens=True))
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ## Text initialization
-# MAGIC
-# MAGIC Our fine-tuned, randomly initialized model did pretty well on the quote above. Let's now compare it with the text initialization method. 
-# MAGIC
-# MAGIC Notice that all we are changing is the `prompt_tuning_init` setting and we are also providing a concise text prompt. 
-# MAGIC
-# MAGIC API docs
-# MAGIC * [prompt_tuning_init_text](https://huggingface.co/docs/peft/main/en/package_reference/tuners#peft.PromptTuningConfig.prompt_tuning_init_text)
-
-# COMMAND ----------
-
-text_peft_config = PromptTuningConfig(
-    task_type=TaskType.CAUSAL_LM,
-    prompt_tuning_init=PromptTuningInit.TEXT,
-    prompt_tuning_init_text="Generate inspirational quotes",
-    num_virtual_tokens=3,
-    tokenizer_name_or_path=model_name
-)
-text_peft_model = get_peft_model(foundation_model, text_peft_config)
-print(text_peft_model.print_trainable_parameters())
-
-# COMMAND ----------
-
-text_trainer = Trainer(
-    model=text_peft_model,
-    args=training_args,
-    train_dataset=train_sample,
-    data_collator=transformers.DataCollatorForLanguageModeling(tokenizer, mlm=False)
-)
-
-text_trainer.train()
-
-# COMMAND ----------
-
-# Save the model
-time_now = time.time()
-text_peft_model_path= f"/dbfs/Users/{username}/tmp/cpu-bloom-text-prompt-tuning-{time_now}"
-text_trainer.model.save_pretrained(text_peft_model_path)
-
-# Load model 
-loaded_text_model = PeftModel.from_pretrained(foundation_model, 
-                                             text_peft_model_path, 
-                                             is_trainable=False)
-# Generate output
-text_outputs = text_peft_model.generate(
-            input_ids=input1["input_ids"], 
-            attention_mask=input1["attention_mask"], 
-            max_new_tokens=7, 
-            eos_token_id=tokenizer.eos_token_id
-        )
-    
-print(tokenizer.batch_decode(text_outputs, skip_special_tokens=True))
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC
-# MAGIC ## Clean up Classroom
-# MAGIC
-# MAGIC Run the following cell to remove lessons-specific assets created during this lesson.
-
-# COMMAND ----------
-
-# DA.cleanup()
+# MAGIC Congrats on applying PEFT - prompt tuning for the first time! In the lab notebook, you will be applying LoRA. 
 
 # COMMAND ----------
 

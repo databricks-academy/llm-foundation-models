@@ -1,5 +1,4 @@
 # Databricks notebook source
-# MAGIC
 # MAGIC %md-sandbox
 # MAGIC
 # MAGIC <div style="text-align: center; line-height: 0; padding-top: 9px;">
@@ -50,7 +49,7 @@ import seaborn
 # COMMAND ----------
 
 # Define a sentence and a simple word2id mapping
-sentence = "The quick brown fox jumps over the lazy dog."
+sentence = "The quick brown fox jumps over the lazy dog"
 word2id = {word: i for i, word in enumerate(set(sentence.split()))}
 print(word2id)
 # Convert text to indices
@@ -84,8 +83,10 @@ def get_positional_encoding(max_seq_len, d_model):
 # Function to plot heatmap
 # ------------------------
 def plot_heatmap(data, title):
-    plt.figure(figsize=(10,10))
-    seaborn.heatmap(data, cmap='cool')
+    plt.figure(figsize=(5,5))
+    seaborn.heatmap(data, cmap="cool",vmin=-1, vmax=1)
+    plt.ylabel("Word/token")
+    plt.xlabel("Positional Encoding Vector")
     plt.title(title)
     plt.show()
 
@@ -95,7 +96,7 @@ def plot_heatmap(data, title):
 max_seq_len = len(sentence.split())  # Maximum sequence length
 d_model = embedding_size  # Same as the size of the word embeddings
 positional_encodings = get_positional_encoding(max_seq_len, d_model)
-plot_heatmap(positional_encodings, 'Positional Encoding')
+plot_heatmap(positional_encodings, "Positional Encoding")
 
 # COMMAND ----------
 
@@ -197,7 +198,7 @@ class PositionalEncoding(nn.Module):
         pe[:, 0::2] = torch.sin(position * div_term)
         pe[:, 1::2] = torch.cos(position * div_term)
         pe = pe.unsqueeze(0).transpose(0, 1)
-        self.register_buffer('pe', pe)
+        self.register_buffer("pe", pe)
 
     def forward(self, x):
         x = x + self.pe[:x.size(0), :]
@@ -254,8 +255,8 @@ def generate_square_subsequent_mask(sz):
 mask = generate_square_subsequent_mask(sz=5)
 
 plt.figure(figsize=(5,5))
-seaborn.heatmap(mask, cmap='viridis', cbar=False, square=True)
-plt.title('Mask for Transformer Decoder')
+seaborn.heatmap(mask, cmap="viridis", cbar=False, square=True)
+plt.title("Mask for Transformer Decoder")
 plt.show()
 
 # COMMAND ----------
@@ -297,7 +298,7 @@ print(predicted_indices.shape)  # Should print torch.Size([context_length, batch
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
-print(f'The model has {count_parameters(model):,} trainable parameters')
+print(f"The model has {count_parameters(model):,} trainable parameters")
 
 # COMMAND ----------
 
@@ -314,22 +315,22 @@ distribution = distribution.detach().numpy()
 # Now plot the distribution
 plt.figure(figsize=(12, 6))
 plt.bar(np.arange(vocab_size), distribution)
-plt.xlabel('Word Index')
-plt.ylabel('Probability')
-plt.title('Output Distribution over Vocabulary')
+plt.xlabel("Word Index")
+plt.ylabel("Probability")
+plt.title("Output Distribution over Vocabulary")
 plt.show()
 
 # COMMAND ----------
 
 # MAGIC %md # Section 3: Multi-layer Decoder
 # MAGIC
-# MAGIC Let's allow for multiple layers in our decoder so we can form models like GPT-2
+# MAGIC Let's allow for multiple layers in our decoder so we can form models like GPT
 
 # COMMAND ----------
 
-class MulitLayerTransformerDecoder(nn.Module):
+class MultiLayerTransformerDecoder(nn.Module):
     def __init__(self, vocab_size, d_model, num_heads, ff_hidden_dim, dropout, num_layers):
-        super(MulitLayerTransformerDecoder, self).__init__()
+        super(MultiLayerTransformerDecoder, self).__init__()
 
 # The __init__ function now also takes a `num_layers` argument, which specifies the number of decoder blocks.
 
@@ -371,10 +372,10 @@ batch_size     = 1
 input_tensor = torch.randint(0, vocab_size, (context_length, batch_size))
 
 # Initialize the model with `num_layer` layers
-model = MulitLayerTransformerDecoder(vocab_size, d_model, num_heads, ff_hidden_dim, dropout, num_layers)
+model = MultiLayerTransformerDecoder(vocab_size, d_model, num_heads, ff_hidden_dim, dropout, num_layers)
 
 # Print the number of trainable parameters
-print(f'The model has {count_parameters(model):,} trainable parameters')
+print(f"The model has {count_parameters(model):,} trainable parameters")
 
 # Let's use the same input_tensor from the previous example
 output = model(input_tensor)
@@ -388,9 +389,9 @@ distribution = distribution.detach().numpy()
 # Now plot the distribution
 plt.figure(figsize=(12, 6))
 plt.bar(np.arange(vocab_size), distribution)
-plt.xlabel('Word Index')
-plt.ylabel('Probability')
-plt.title('Output Distribution over Vocabulary')
+plt.xlabel("Word Index")
+plt.ylabel("Probability")
+plt.title("Output Distribution over Vocabulary")
 plt.show()
 
 # COMMAND ----------
@@ -414,7 +415,7 @@ num_layers     = 4
 context_length = 5
 batch_size     = 1
 # Define the vocabulary
-vocab = ['of', 'in', 'to', 'for', 'with', 'on', 'at', 'from', 'by', 'about', 'as', 'into', 'like', 'through', 'after', 'over', 'between', 'out', 'against', 'during', 'without', 'before', 'under', 'around', 'among']
+vocab = ["of", "in", "to", "for", "with", "on", "at", "from", "by", "about", "as", "into", "like", "through", "after", "over", "between", "out", "against", "during", "without", "before", "under", "around", "among"]
 vocab_size = len(vocab)
 
 # Create a dictionary that maps words to indices
@@ -424,11 +425,11 @@ word2id = {word: id for id, word in enumerate(vocab)}
 id2word = {id: word for id, word in enumerate(vocab)}
 
 # Initialize the model
-model = MulitLayerTransformerDecoder(vocab_size, d_model, num_heads, ff_hidden_dim, dropout, num_layers)
+model = MultiLayerTransformerDecoder(vocab_size, d_model, num_heads, ff_hidden_dim, dropout, num_layers)
 
 # Create a tensor representing a single sequence of variable length
 # Here we randomly select words from our vocabulary
-sequence = ['of', 'in', 'to', 'for', 'with', 'on', 'at'][:context_length]
+sequence = ["of", "in", "to", "for", "with", "on", "at"][:context_length]
 input_tensor = torch.tensor([[word2id[word] for word in sequence]])
 
 # Generate a sequence of words
@@ -437,7 +438,7 @@ for i in range(10):  # Generate 10 words
     output = model(input_tensor)
     predicted_index = output.argmax(dim=-1)[0, -1]  # Take the last word in the sequence
     predicted_word = id2word[predicted_index.item()]
-    print(predicted_word, end=' ')
+    print(predicted_word, end=" ")
     generated_words.append(predicted_word)
     input_tensor = torch.cat([input_tensor, predicted_index.unsqueeze(0).unsqueeze(0)], dim=-1)  # Append the predicted word to the input
     time.sleep(0.75)  # Pause for 1 second
@@ -447,14 +448,7 @@ for i in range(10):  # Generate 10 words
 
 # MAGIC %md # Section 5: Using a trained decoder and real-world vocabulary
 # MAGIC
-# MAGIC Training our model will take a long time, let's look at two trained versions of what we've been building, GPT and GPT-XL. These are both decoder models with only slight changes:
-# MAGIC  
-# MAGIC #### Needs more info 
-# MAGIC  GPT2-small vs. GPT2-XLARGE
-# MAGIC - Number of layers:
-# MAGIC - Dimension of embeddings:
-# MAGIC ####
-# MAGIC
+# MAGIC Training our model will take a long time, let's look at two trained versions of what we've been building, GPT and GPT-XL. These are both decoder models with only slight changes in sizes
 
 # COMMAND ----------
 
@@ -462,8 +456,8 @@ for i in range(10):  # Generate 10 words
 from transformers import GPT2LMHeadModel, GPT2Tokenizer
 
 # Load pre-trained models and tokenizers
-tokenizer_small = GPT2Tokenizer.from_pretrained('gpt2')
-model_small = GPT2LMHeadModel.from_pretrained('gpt2')
+tokenizer_small = GPT2Tokenizer.from_pretrained("gpt2", cache_dir=DA.paths.datasets)
+model_small = GPT2LMHeadModel.from_pretrained("gpt2", cache_dir=DA.paths.datasets)
 
 # COMMAND ----------
 
@@ -485,7 +479,7 @@ pad_token_id_small = tokenizer_small.eos_token_id
 
 # Print the initial prompt. The 'end' argument specifies what to print at the end (default is newline, but we want space).
 # 'flush' argument ensures that the output is printed immediately.
-print(prompt, end=' ', flush=True)
+print(prompt, end=" ", flush=True)
 
 # We're going to generate 25 words
 for _ in range(25):
@@ -517,24 +511,24 @@ print("\nGPT-2 Small completed.")
 
 # COMMAND ----------
 
-tokenizer_large = GPT2Tokenizer.from_pretrained('gpt2-XL')
-model_large = GPT2LMHeadModel.from_pretrained('gpt2-XL')
+tokenizer_large = GPT2Tokenizer.from_pretrained("gpt2-XL", cache_dir=DA.paths.datasets)
+model_large = GPT2LMHeadModel.from_pretrained("gpt2-XL", cache_dir=DA.paths.datasets)
 
 # COMMAND ----------
 
 # Generate text with GPT-2 XL
-inputs_large = tokenizer_large.encode(prompt, return_tensors='pt')
+inputs_large = tokenizer_large.encode(prompt, return_tensors="pt")
 
 # Add in the attention mask and pad token id
 attention_mask_large = torch.ones(inputs_large.shape, dtype=torch.long)  # Creating a mask of ones with the same shape as inputs
 pad_token_id_large = tokenizer_large.eos_token_id  # Get the eos_token_id from the tokenizer
 
-print(prompt, end=' ', flush=True)
+print(prompt, end=" ", flush=True)
 for _ in range(25):  # Generate 25 words
     outputs_large = model_large.generate(inputs_large, max_length=inputs_large.shape[-1]+1, do_sample=True, pad_token_id=pad_token_id_large,
                                          attention_mask=attention_mask_large)
     generated_word = tokenizer_large.decode(outputs_large[0][-1])
-    print(generated_word, end=' ', flush=True)
+    print(generated_word, end=" ", flush=True)
     inputs_large = torch.cat([inputs_large, outputs_large[0][-1].unsqueeze(0).unsqueeze(0)], dim=-1)
     attention_mask_large = torch.cat([attention_mask_large, torch.ones((1, 1), dtype=torch.long)], dim=-1)
     time.sleep(0.7)

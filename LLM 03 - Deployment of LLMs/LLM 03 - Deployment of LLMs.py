@@ -1,5 +1,4 @@
 # Databricks notebook source
-# MAGIC
 # MAGIC %md-sandbox
 # MAGIC
 # MAGIC <div style="text-align: center; line-height: 0; padding-top: 9px;">
@@ -12,13 +11,11 @@
 # MAGIC # Understanding and Applying Quantization
 # MAGIC
 # MAGIC Quantization is a method that can allow models to run faster and use less memory. By converting 32-bit floating-point numbers (the `float32` data type) into lower-precision formats, like 8-bit integers (the `int8` data type), we can reduce the computational requirements of our models. Let's start with the basics and gradually move towards quantizing complex models like CNNs.
-# MAGIC ### Learning Objectives:
-# MAGIC - 1 
-# MAGIC
 # MAGIC
 # MAGIC ### ![Dolly](https://files.training.databricks.com/images/llm/dolly_small.png) Learning Objectives
-# MAGIC 1. Sed ut perspiciatis unde omnis iste natus
-# MAGIC 1. Totam rem aperiam, eaque ipsa quae ab
+# MAGIC 1. Explore how to quantize a a single variable and a function in pytorch
+# MAGIC 1. Apply quantization to a neural network
+# MAGIC 1. Compare the size and performance of quantized convolutional neural network 
 
 # COMMAND ----------
 
@@ -95,6 +92,8 @@ def unquantize(quantized_value, bits):
     value = quantized_value / (2**(bits - 1) - 1)
     return float(value)
 
+# COMMAND ----------
+
 # Test the quantize and unquantize functions with 4 and 8 bits
 value = 0.5
 quantized_value_4bit = quantize(value, bits=4)
@@ -103,7 +102,7 @@ unquantized_value_4bit = unquantize(quantized_value_4bit, bits=4)
 quantized_value_8bit = quantize(value, bits=8)
 unquantized_value_8bit = unquantize(quantized_value_8bit, bits=8)
 
-value, (quantized_value_4bit, unquantized_value_4bit), (quantized_value_8bit, unquantized_value_8bit)
+print(f"Original Value: {value}\n----\n4-bit Quantization:{quantized_value_4bit}\n4-bit Unquantization: {unquantized_value_4bit}\n----\n8-bit Quantization:{quantized_value_8bit}\n8-bit Unquantization: {unquantized_value_8bit}")
 
 # COMMAND ----------
 
@@ -135,32 +134,39 @@ y_unquantized_8bit = np.array([unquantize(val, bits=8) for val in y_quantized_8b
 loss_4bit = np.mean((y - y_unquantized_4bit)**2)
 loss_8bit = np.mean((y - y_unquantized_8bit)**2)
 
+print(f"Loss of 4-bit quantization: {loss_4bit}\nLoss of 8-bit quantization: {loss_8bit}")
+
+# COMMAND ----------
+
 # Plot original, quantized and unquantized values
-plt.figure(figsize=(12, 8))
+plt.figure(figsize=(10, 12))
 
-plt.subplot(3, 1, 1)
-plt.plot(x, y, label='Original')
-plt.title('Original')
+plt.subplot(4, 1, 1)
+plt.plot(x, y, label="Original")
+plt.title("Original")
 plt.grid(True)
 
-plt.subplot(3, 1, 2)
-plt.scatter(x, y_quantized_4bit, label='Quantized 4 bit', marker='s')
-plt.scatter(x, y_quantized_8bit, label='Quantized 8 bit', marker='s')
+plt.subplot(4, 1, 2)
+plt.scatter(x, y_quantized_4bit, label="Quantized 4 bit", marker="s")
 plt.legend()
-plt.title('Quantized')
+plt.title("Quantized")
 plt.grid(True)
 
-plt.subplot(3, 1, 3)
-plt.plot(x, y_unquantized_4bit, label='Unquantized 4 bit')
-plt.plot(x, y_unquantized_8bit, label='Unquantized 8 bit')
+plt.subplot(4, 1, 3)
+plt.scatter(x, y_quantized_8bit, label="Quantized 8 bit", marker="s")
 plt.legend()
-plt.title('Unquantized')
+plt.title("Quantized")
+plt.grid(True)
+
+plt.subplot(4, 1, 4)
+plt.plot(x, y_unquantized_4bit, label="Unquantized 4 bit")
+plt.plot(x, y_unquantized_8bit, label="Unquantized 8 bit")
+plt.legend()
+plt.title("Unquantized")
 plt.grid(True)
 
 plt.tight_layout()
 plt.show()
-
-loss_4bit, loss_8bit
 
 # COMMAND ----------
 
@@ -175,25 +181,19 @@ loss_4bit, loss_8bit
 
 # MAGIC %md 
 # MAGIC ### 3. Quantization of a Simple Neural Network
-# MAGIC Next, let's apply quantization to a neural network. We'll create a simple network with one hidden layer, then we'll quantize and dequantize its weights. We'll use PyTorch, a popular library for building and training neural networks.
+# MAGIC Next, let's apply quantization to a neural network. We'll create a simple network with one hidden layer, then we'll quantize and dequantize its weights.
 # MAGIC
-# MAGIC In PyTorch, quantization is achieved using a QuantStub and DeQuantStub to mark the points in the model where the data needs to be converted to quantized form and converted back to floating point form, respectively. After defining the network with these stubs, we use the torch.quantization.prepare and torch.quantization.convert functions to quantize the model.
+# MAGIC In PyTorch, [quantization](https://pytorch.org/docs/stable/quantization.html) is achieved using a `QuantStub` and `DeQuantStub` to mark the points in the model where the data needs to be converted to quantized form and converted back to floating point form, respectively. After defining the network with these stubs, we use the `torch.quantization.prepare` and `torch.quantization.convert` functions to quantize the model.
 # MAGIC
 # MAGIC The process of quantizing a model in PyTorch involves the following steps:
 # MAGIC
-# MAGIC - Define a neural network and mark the points in the model where the data needs to be converted to quantized form and converted back to floating point form. This is done using a QuantStub and DeQuantStub.
-# MAGIC
-# MAGIC - Specify a quantization configuration for the model using torch.quantization.get_default_qconfig. This sets up the quantization parameters.
-# MAGIC
-# MAGIC - Prepare the model for quantization using torch.quantization.prepare. This function replaces specified modules in the model with their quantized counterparts.
-# MAGIC
+# MAGIC - Define a neural network and mark the points in the model where the data needs to be converted to quantized form and converted back to floating point form. This is done using a `QuantStub` and `DeQuantStub`.
+# MAGIC - Specify a quantization configuration for the model using `torch.quantization.get_default_qconfig`. This sets up the quantization parameters.
+# MAGIC - Prepare the model for quantization using `torch.quantization.prepare`. This function replaces specified modules in the model with their quantized counterparts.
 # MAGIC - Calibrate the model on a calibration dataset. During calibration, the model is run on a calibration dataset and the range of the activations is observed. This is used to determine the parameters for quantization.
-# MAGIC
 # MAGIC - Convert the prepared and calibrated model to a quantized version using torch.quantization.convert. This function changes these modules to use quantized weights.
 
 # COMMAND ----------
-
-# Here's the code you would use to define, train, quantize, and dequantize a simple neural network. Since this is for illustrative purposes and we can't train models in this environment, I'll just present the code without running it:
 
 # Define the network architecture
 class Net(nn.Module):
@@ -227,16 +227,19 @@ class Net(nn.Module):
         
         return x
 
+# COMMAND ----------
 
 # Load the MNIST dataset
 transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
-trainset = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transform)
+trainset = torchvision.datasets.MNIST(root=DA.paths.working_dir, train=True, download=True, transform=transform)
 trainloader = DataLoader(trainset, batch_size=64, shuffle=True)
 
 # Define loss function and optimizer
 net = Net()
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(net.parameters(), lr=0.01)
+
+# COMMAND ----------
 
 # Train the network
 for epoch in range(2):  # loop over the dataset multiple times
@@ -257,28 +260,28 @@ for epoch in range(2):  # loop over the dataset multiple times
         # print statistics
         running_loss += loss.item()
         if i % 200 == 199:    # print every 200 mini-batches
-            print('[%d, %5d] loss: %.3f' %
+            print("[%d, %5d] loss: %.3f" %
                   (epoch + 1, i + 1, running_loss / 200))
             running_loss = 0.0
 
-print('Finished Training')
+print("Finished Training")
+
+# COMMAND ----------
 
 # Specify quantization configuration
-net.qconfig = torch.ao.quantization.get_default_qconfig('x86')
+net.qconfig = torch.ao.quantization.get_default_qconfig("onednn")
 
 # Prepare the model for static quantization. This inserts observers in the model that will observe activation tensors during calibration.
 net_prepared = torch.quantization.prepare(net)
 
-# Calibrate the prepared model to determine quantization parameters.
-# Calibration would be done here using a calibration dataset.
-# After calibration, we convert the model to a quantized version.
+# Now we convert the model to a quantized version.
 net_quantized = torch.quantization.convert(net_prepared)
-# In the above code, calibration is a step where the model is run on a calibration dataset and the range of the activations is observed. This is used to determine the parameters for quantization. After calibration, torch.quantization.convert is called to convert the model to use quantized weights.
 
 # Once the model is quantized, it can be used for inference in the same way as the unquantized model, but it will use less memory and potentially have faster inference times, at the cost of a possible decrease in accuracy.
 
 # COMMAND ----------
 
+# Let's look at the sizes of these two models on disk and see how much we save by quantization
 buf = io.BytesIO()
 torch.save(net.state_dict(), buf)
 size_original = sys.getsizeof(buf.getvalue())
@@ -287,15 +290,15 @@ buf = io.BytesIO()
 torch.save(net_quantized.state_dict(), buf)
 size_quantized = sys.getsizeof(buf.getvalue())
 
-print('Size of the original model: ', size_original)
-print('Size of the quantized model: ', size_quantized)
-print(f'The quantized model is {np.round(100.*(size_quantized )/ size_original)}% the size of the original model')
+print("Size of the original model: ", size_original)
+print("Size of the quantized model: ", size_quantized)
+print(f"The quantized model is {np.round(100.*(size_quantized )/ size_original)}% the size of the original model")
 
 # COMMAND ----------
 
 # Print out the weights of the original network
 for name, param in net.named_parameters():
-    print('Original Network Layer:', name)
+    print("Original Network Layer:", name)
     print(param.data)
 
 # COMMAND ----------
@@ -303,12 +306,12 @@ for name, param in net.named_parameters():
 # Print out the weights of the quantized network
 for name, module in net_quantized.named_modules():
     if isinstance(module, nn.quantized.Linear):
-        print('Quantized Network Layer:', name)
+        print("Quantized Network Layer:", name)
         
-        print('Weight:')
+        print("Weight:")
         print(module.weight())
         
-        print('Bias:')
+        print("Bias:")
         print(module.bias)
 
 
@@ -317,26 +320,17 @@ for name, module in net_quantized.named_modules():
 # MAGIC %md
 # MAGIC #### Comparing a Quantized and Non-Quantized Model
 # MAGIC
-# MAGIC - Here is a summary of the details and a comparison with the original model:
+# MAGIC Here is a summary of the details and a comparison with the original model:
 # MAGIC
-# MAGIC - Tensor Values: In the quantized model, these are quantized values of the weights and biases, compared to the original model which stores these in floating point precision. These values are used in the computations performed by the layer, and they directly affect the layer's output.
-# MAGIC
-# MAGIC - Size: This is the shape of the weight or bias tensor and it should be the same in both the original and quantized model. In a fully-connected layer, this corresponds to the number of neurons in the current layer and the number of neurons in the previous layer.
-# MAGIC
-# MAGIC - Dtype: In the original model, the data type of the tensor values is usually torch.float32 (32-bit floating point), whereas in the quantized model it is a quantized data type like torch.qint8 (8-bit quantized integer). This reduces the memory usage and computational requirements of the model.
-# MAGIC
-# MAGIC - Quantization_scheme: This is specific to the quantized model. It is the type of quantization used, for example, torch.per_channel_affine means different channels (e.g., neurons in a layer) can have different scale and zero_point values.
-# MAGIC
-# MAGIC - Scale & Zero Point: These are parameters of the quantization process and are specific to the quantized model. They are used to convert between the quantized and dequantized forms of the tensor values.
-# MAGIC
-# MAGIC - Axis: This indicates the dimension along which the quantization parameters vary. This is also specific to the quantized model.
-# MAGIC
-# MAGIC - Requires_grad: This indicates whether the tensor is a model parameter that is updated during training. It should be the same in both the original and quantized models.
+# MAGIC - `Tensor Values`: In the quantized model, these are quantized values of the weights and biases, compared to the original model which stores these in floating point precision. These values are used in the computations performed by the layer, and they directly affect the layer's output.
+# MAGIC - `Size`: This is the shape of the weight or bias tensor and it should be the same in both the original and quantized model. In a fully-connected layer, this corresponds to the number of neurons in the current layer and the number of neurons in the previous layer.
+# MAGIC - `Dtype`: In the original model, the data type of the tensor values is usually torch.float32 (32-bit floating point), whereas in the quantized model it is a quantized data type like torch.qint8 (8-bit quantized integer). This reduces the memory usage and computational requirements of the model.
+# MAGIC - `Quantization_scheme`: This is specific to the quantized model. It is the type of quantization used, for example, torch.per_channel_affine means different channels (e.g., neurons in a layer) can have different scale and zero_point values.
+# MAGIC - `Scale & Zero Point`: These are parameters of the quantization process and are specific to the quantized model. They are used to convert between the quantized and dequantized forms of the tensor values.
+# MAGIC - `Axis`: This indicates the dimension along which the quantization parameters vary. This is also specific to the quantized model.
+# MAGIC - `Requires_grad`: This indicates whether the tensor is a model parameter that is updated during training. It should be the same in both the original and quantized models.
 
 # COMMAND ----------
-
-# Here's a sample use of these points:
-
 
 # Suppose we have some input data
 input_data = torch.randn(1, 28 * 28)
@@ -348,20 +342,29 @@ output_quantized = net_quantized(input_data)
 # The outputs should be similar, because the quantized model is a lower-precision
 # approximation of the original model. However, they won't be exactly the same
 # because of the quantization process.
-print('Output from original model:', output_original)
-print('Output from quantized model:', output_quantized)
+print("Output from original model:", output_original.data)
+print("Output from quantized model:", output_quantized.data)
+
+# COMMAND ----------
 
 # The difference between the outputs is an indication of the "quantization error",
 # which is the error introduced by the quantization process.
 quantization_error = (output_original - output_quantized).abs().mean()
-print('Quantization error:', quantization_error)
+print("Quantization error:", quantization_error)
+
+# COMMAND ----------
 
 # The weights of the original model are stored in floating point precision, so they
 # take up more memory than the quantized weights. We can check this using the
 # `element_size` method, which returns the size in bytes of one element of the tensor.
-print('Size of one weight in original model:', net.fc1.weight.element_size())
-print('Size of one weight in quantized model:', net_quantized.fc1.weight().element_size())
-# This example shows how the quantized model can be used in the same way as the original model. It also demonstrates the trade-off between precision and memory usage/computation speed that comes with quantization. The quantized model uses less memory and is faster to compute, but the outputs are not exactly the same as the original model due to the quantization error.
+print(f"Size of one weight in original model: {net.fc1.weight.element_size()} bytes (32bit)")
+print(f"Size of one weight in quantized model: {net_quantized.fc1.weight().element_size()} byte (8bit)")
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC
+# MAGIC This example shows how the quantized model can be used in the same way as the original model. It also demonstrates the trade-off between precision and memory usage/computation speed that comes with quantization. The quantized model uses less memory and is faster to compute, but the outputs are not exactly the same as the original model due to the quantization error.
 
 # COMMAND ----------
 

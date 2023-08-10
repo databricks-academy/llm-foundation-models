@@ -1,5 +1,4 @@
 # Databricks notebook source
-# MAGIC
 # MAGIC %md-sandbox
 # MAGIC
 # MAGIC <div style="text-align: center; line-height: 0; padding-top: 9px;">
@@ -41,9 +40,9 @@
 
 # COMMAND ----------
 
-working_dir = f"{DA.paths.working_dir.replace('/dbfs/', 'dbfs:/')}/tmp"
-dbutils.fs.mkdirs(working_dir)
-local_working_dir = working_dir.replace('dbfs:/', '/dbfs/')
+# working_dir = f"{DA.paths.working_dir.replace('/dbfs/', 'dbfs:/')}/tmp"
+# dbutils.fs.mkdirs(working_dir)
+# local_working_dir = working_dir.replace('dbfs:/', '/dbfs/')
 
 # COMMAND ----------
 
@@ -70,7 +69,10 @@ print(streams)
 
 # COMMAND ----------
 
-file_path = streams[0].download(output_path=f"{working_dir}")
+import os
+
+output_dir = os.path.join(DA.paths.working_dir, "video")
+file_path = streams[0].download(output_path=output_dir)
 file_path
 
 # COMMAND ----------
@@ -276,6 +278,7 @@ display(cat_image)
 # COMMAND ----------
 
 caption_list = ["eating pasta", "cats sleeping"]
+
 inputs = clip_processor(text=caption_list, 
                         images=cat_image, 
                         return_tensors="pt", 
@@ -313,15 +316,16 @@ audio_url = "https://audio-samples.github.io/samples/mp3/blizzard_primed/sample-
 # Download the audio file
 response = requests.get(audio_url)
 
+audio_directory = os.path.join(DA.paths.working_dir, "sample_audio.mp3")
 # Save the audio file to disk
-with open(f"{local_working_dir}/sample_audio.mp3", "wb") as audio_file:
+with open(audio_directory, "wb") as audio_file:
     audio_file.write(response.content) 
 
 print("Sample audio file 'sample_audio.wav' downloaded.")
 
 # COMMAND ----------
 
-audio_file = open(f"{local_working_dir}/sample_audio.mp3", "rb")
+audio_file = open(audio_directory, "rb")
 transcript = openai.Audio.transcribe("whisper-1", audio_file)
 print(transcript)
 

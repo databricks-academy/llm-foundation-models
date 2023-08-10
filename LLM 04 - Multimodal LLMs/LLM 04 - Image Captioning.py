@@ -1,5 +1,4 @@
 # Databricks notebook source
-# MAGIC
 # MAGIC %md-sandbox
 # MAGIC
 # MAGIC <div style="text-align: center; line-height: 0; padding-top: 9px;">
@@ -69,11 +68,17 @@ from io import BytesIO
 class ProcessDataset(Dataset):
     def __init__(self, df, tokenizer,feature_extractor, decoder_max_length=20):
         self.df = df
-        self.tokenizer = tokenizer
-        self.feature_extractor = feature_extractor
-        self.decoder_max_length = decoder_max_length
+        self.tokenizer = tokenizer # this is for language model 
+        self.feature_extractor = feature_extractor # this is for vision model 
+        self.decoder_max_length = decoder_max_length # this is for caption output
 
-    def __getrecord__(self, idx):
+    def __len__(self):
+        # this is necessary so that HuggingFace won't complain that the dataset doesn't have __len__ method 
+        # when it starts training
+        return len(self.df)
+
+    def __getitem__(self, idx):
+        # this is another method name that HuggingFace expects 
         # get file name + text 
         img_path = self.df["image_url"][idx]
         caption = self.df["caption"][idx]
@@ -97,23 +102,23 @@ class ProcessDataset(Dataset):
 # MAGIC %md
 # MAGIC ### Initialize tokenizer and image feature extractor
 # MAGIC
-# MAGIC Next, we will initialize our tokenizer to process text and feature extractor to process images respectively. After this, we are ready to pass our training dataset for processing 
+# MAGIC Next, we will initialize our tokenizer to process text and feature extractor to process images respectively. After this, we are ready to pass our training dataset for processing.
 
 # COMMAND ----------
 
 from transformers import GPT2TokenizerFast, ViTFeatureExtractor
 
-tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
+tokenizer = GPT2TokenizerFast.from_pretrained("gpt2", cache_dir=DA.paths.datasets)
 # GPT2 doesn't have a pad token 
 tokenizer.pad_token = tokenizer.eos_token
 
-feature_extractor = ViTFeatureExtractor.from_pretrained("google/vit-base-patch16-224-in21k")
+feature_extractor = ViTFeatureExtractor.from_pretrained("google/vit-base-patch16-224-in21k", cache_dir=DA.paths.datasets)
 
 # COMMAND ----------
 
 train_dataset = ProcessDataset(df=data[:2000],
                                tokenizer=tokenizer,
-                               feature_extractor= feature_extractor)
+                               feature_extractor=feature_extractor)
 
 # COMMAND ----------
 
@@ -122,7 +127,7 @@ train_dataset = ProcessDataset(df=data[:2000],
 # MAGIC
 # MAGIC Here, we will finally use `VisionEncoderDecoder` to connect our pretrained image and text models of choice. 
 # MAGIC
-# MAGIC You might see in the output that some weights of the GPT2 model are not initialized from the model checkpoint. You might also see this line output by HuggingFace: `You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.` For the best performance, we should ideally fine-tune this decoder on our own dataset separately and load the fine-tuned model. However, for simplicity's sake, we are simply going to use the model as is, and fine-tune the image-captioning model as a whole. 
+# MAGIC You might see in the output that some weights of the GPT2 model are not initialized from the model checkpoint; from HuggingFace: `You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.` For the best performance, we should ideally fine-tune this decoder on our own dataset separately and load the fine-tuned decoder. However, for simplicity's sake, we are simply going to use the model as is, and fine-tune the image-captioning model as a whole. 
 
 # COMMAND ----------
 
@@ -143,7 +148,7 @@ model.config.eos_token_id = tokenizer.eos_token_id
 # We will adjust several more model configuration settings here 
 model.config.vocab_size = model.config.decoder.vocab_size
 model.config.early_stopping = True
-model.config.no_repeat_ngram_size = 3
+model.config.no_repeat_ngram_size = 3 # this determines a sequence of N words that cannot be repeated 
 model.config.length_penalty = 2.0
 
 # For decoder only 
@@ -163,18 +168,21 @@ model.decoder.max_length = 20
 
 from transformers import Trainer, TrainingArguments
 from transformers import default_data_collator
+import os
 
 BATCH_SIZE = 16
 TRAIN_EPOCHS = 20
 
+output_directory = os.path.join(DA.paths.working_dir, "captioning_outputs")
+
 training_args = TrainingArguments(
-    output_dir="captioning",
+    output_dir=output_directory,
     per_device_train_batch_size=BATCH_SIZE,
     do_train=True,
-    num_train_epochs=TRAIN_EPOCHS,
+    num_train_epochs=TRAIN_EPOCHS, # number of passes to see the entire dataset 
     overwrite_output_dir=True,
     no_cuda=True, # Not using GPU
-    dataloader_pin_memory=False
+    dataloader_pin_memory=False # this specifies whether you want to pin memory in data loaders or not
 )
 
 trainer = Trainer(
@@ -184,6 +192,11 @@ trainer = Trainer(
     train_dataset=train_dataset,
     data_collator=default_data_collator,
 )
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC Note: You might notice that this cells triggers a whole new MLflow run. [MLflow](https://mlflow.org/docs/latest/index.html) is an open source tool that helps to manage end-to-end machine learning lifecycle, including experiment tracking, ML code packaging, and model deployment. You can read more about [LLM tracking here](https://mlflow.org/docs/latest/llm-tracking.html).
 
 # COMMAND ----------
 
@@ -208,6 +221,7 @@ display(test_image)
 # COMMAND ----------
 
 caption = tokenizer.decode(trainer.model.generate(feature_extractor(test_image, return_tensors="pt").pixel_values)[0])
+print("--"*20)
 print(caption)
 
 # COMMAND ----------
@@ -226,18 +240,18 @@ print(caption)
 # MAGIC
 # MAGIC Will the caption generated improve and be more relevant? Let's find out! 
 # MAGIC
-# MAGIC We will be using a new model called `BLIP`, which standas for Bootstrapping Language-Image Pre-training. It's a modeling approach to unify vision-language understanding and generation by [Li et al 2022](https://arxiv.org/abs/2201.12086). It stands out from other vision-language model because: 
+# MAGIC We will be using a new model called `BLIP`, which stands for Bootstrapping Language-Image Pre-training. It's a modeling approach to unify vision-language understanding and generation by [Li et al 2022](https://arxiv.org/abs/2201.12086). It stands out from other vision-language model because: 
 # MAGIC
 # MAGIC >  Most existing pre-trained models only excel in either understanding-based tasks or generation-based tasks. [...] BLIP effectively utilizes the noisy web data by bootstrapping the captions, where a captioner generates synthetic captions and a filter removes the noisy ones.
 # MAGIC
-# MAGIC The excerpt above is from the paper's abstract. 
+# MAGIC The excerpt above is from the paper's abstract. You can also read briefly about BLIP in the [HuggingFace documentation](https://huggingface.co/Salesforce/blip-image-captioning-base).
 
 # COMMAND ----------
 
 from transformers import BlipProcessor, BlipForConditionalGeneration
 
-blip_processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-base")
-blip_model = BlipForConditionalGeneration.from_pretrained("Salesforce/blip-image-captioning-base")
+blip_processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-base", cache_dir=DA.paths.datasets)
+blip_model = BlipForConditionalGeneration.from_pretrained("Salesforce/blip-image-captioning-base", cache_dir=DA.paths.datasets)
 
 # conditional image captioning
 # in many of the initial vision-language models, adding a prefix text like below "a photo of " is crucial for models to do well

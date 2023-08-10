@@ -1,5 +1,4 @@
 # Databricks notebook source
-# MAGIC
 # MAGIC %md-sandbox
 # MAGIC
 # MAGIC <div style="text-align: center; line-height: 0; padding-top: 9px;">
@@ -156,7 +155,7 @@ output = model(input_tensor, mask=None)
 
 
 
-print(f'The model has {sum(p.numel() for p in model.parameters() if p.requires_grad):,} trainable parameters')
+print(f"The model has {sum(p.numel() for p in model.parameters() if p.requires_grad):,} trainable parameters")
 
 # COMMAND ----------
 
@@ -249,7 +248,7 @@ similarity = sentence_similarity(sentence1, sentence2, model, word2id)
 similarity_score = similarity.item()
 
 # Print the result with a descriptive sentence
-print(f"The cosine similarity between the sentences '{sentence1}' and '{sentence2}' is {similarity_score:.2f}.")
+print(f"The cosine similarity between the sentences {sentence1} and {sentence2} is {similarity_score:.2f}.")
 
 
 
@@ -309,9 +308,9 @@ from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 
 # Load pre-trained BERT model and tokenizer
-model_name = 'bert-base-uncased'
-model_bert = BertModel.from_pretrained(model_name)
-tokenizer = BertTokenizer.from_pretrained(model_name)
+model_name = "bert-base-uncased"
+model_bert = BertModel.from_pretrained(model_name, cache_dir=DA.paths.datasets)
+tokenizer = BertTokenizer.from_pretrained(model_name, cache_dir=DA.paths.datasets)
 
 # Define a list of words to plot
 words = [
@@ -325,7 +324,7 @@ words = [
 # Get the embeddings of the words
 embeddings = []
 for word in words:
-    inputs = tokenizer(word, return_tensors='pt')
+    inputs = tokenizer(word, return_tensors="pt")
     with torch.no_grad():
         outputs = model_bert(**inputs)
     embeddings.append(outputs.last_hidden_state[0, 0, :].numpy())
@@ -362,7 +361,7 @@ def count_parameters(model):
 # Use different parameters to see the effects on the overall model size. 
 # Create a Transformer Encoder with different hyperparameters
 new_model = TransformerEncoder("<FILL_IN>")
-print(f'The model has {count_parameters(model):,} trainable parameters, compared to the 21,986,304 of the original model')
+print(f"The model has {count_parameters(model):,} trainable parameters, compared to the 21,986,304 of the original model")
 
 # COMMAND ----------
 
@@ -457,7 +456,7 @@ avg_embedding1 = "<FILL_IN>"
 avg_embedding2 = "<FILL_IN>"
 
 similarity = "<FILL_IN>"
-print("Cosine similarity between embeddings of the word 'bank' in two different contexts:", similarity.item())
+print(f"Cosine similarity between embeddings of the word 'bank' in two different contexts: {similarity.item()}")
 
 # COMMAND ----------
 
@@ -485,12 +484,12 @@ dbTestQuestion1_4(sentence_q4a, sentence_q4b)
 from transformers import BertTokenizer, BertForMaskedLM
 
 # Load pre-trained model and tokenizer
-tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-mlm_model = BertForMaskedLM.from_pretrained('bert-base-uncased')
+tokenizer = BertTokenizer.from_pretrained("bert-base-uncased", cache_dir=DA.paths.datasets)
+mlm_model = BertForMaskedLM.from_pretrained("bert-base-uncased", cache_dir=DA.paths.datasets)
 
 # Define a function to predict masked words
 def predict_masked_words(sentence, model, tokenizer):
-    inputs = tokenizer(sentence, return_tensors='pt')
+    inputs = tokenizer(sentence, return_tensors="pt")
     with torch.no_grad():
         outputs = model(**inputs)
     predicted_token_ids = outputs.logits.argmax(dim=-1)
@@ -583,6 +582,12 @@ print(predict_masked_words(sentence, mlm_model, tokenizer))
 
 # COMMAND ----------
 
+# Test your answer. DO NOT MODIFY THIS CELL.
+
+dbTestQuestion1_6(sentence_q6)
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC **Question 7:** 
 # MAGIC Mask a word that has different meanings in different contexts. Does the model accurately predict the correct word based on the context?
@@ -595,6 +600,12 @@ sentence_q7a = "<FILL_IN>"
 sentence_q7b = "<FILL_IN>"
 print(predict_masked_words(sentence_q7a, mlm_model, tokenizer))
 print(predict_masked_words(sentence_q7b, mlm_model, tokenizer))
+
+# COMMAND ----------
+
+# Test your answer. DO NOT MODIFY THIS CELL.
+
+dbTestQuestion1_7(sentence_q7a, sentence_q7b)
 
 # COMMAND ----------
 
@@ -611,6 +622,12 @@ print(predict_masked_words(sentence, mlm_model, tokenizer))
 
 # COMMAND ----------
 
+# Test your answer. DO NOT MODIFY THIS CELL.
+
+dbTestQuestion1_8(sentence_q8)
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC **Question 9:** 
 # MAGIC Mask a word in a sentence that contains an idiomatic expression. Does the model accurately predict the masked word?
@@ -621,6 +638,12 @@ print(predict_masked_words(sentence, mlm_model, tokenizer))
 # Define a sentence that contains an idiomatic expression
 sentence_q9 = "<FILL_IN>"
 print(predict_masked_words(sentence_q9, mlm_model, tokenizer))
+
+# COMMAND ----------
+
+# Test your answer. DO NOT MODIFY THIS CELL.
+
+dbTestQuestion1_9(sentence_q9)
 
 # COMMAND ----------
 

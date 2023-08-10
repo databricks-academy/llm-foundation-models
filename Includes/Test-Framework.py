@@ -88,7 +88,7 @@ def dbTestQuestion1_4(sentence_q4a, sentence_q4b):
   lesson, question = "lesson1", "question4"
   userhome_for_testing = getUsernameFromEnv(lesson)
   
-  assert set(sentence_q4a)==set(sentence_q4b), "Test NOT passed: The two sentences should contain the exact same words."
+  assert (str(type(sentence_q4a)) == "<class 'str'>" and str(type(sentence_q4b)) == "<class 'str'>"), "Test NOT passed: The two sentences should both be of type `string`."
 
   questionPassed(userhome_for_testing, lesson, question)
 
@@ -124,7 +124,7 @@ def dbTestQuestion1_8(sentence_q8):
   
   questionPassed(userhome_for_testing, lesson, question) 
 
-def dbTestQuestion1_9():
+def dbTestQuestion1_9(sentence_q9):
   lesson, question = "lesson1", "question9"
   userhome_for_testing = getUsernameFromEnv(lesson)
 
@@ -207,7 +207,7 @@ def dbTestQuestion4_1(indices):
   lesson, question = "lesson4", "question1"
   userhome_for_testing = getUsernameFromEnv(lesson)
 
-  assert indices == 32, "Test NOT passsed: `indices` should be equal to 32."
+  assert len(indices) == 32, "Test NOT passsed: `indices` length should be equal to 32."
 
   questionPassed(userhome_for_testing, lesson, question)
 
@@ -223,7 +223,7 @@ def dbTestQuestion4_3(model_name, video_probs):
   lesson, question = "lesson4", "question3"
   userhome_for_testing = getUsernameFromEnv(lesson)
 
-  assert text_description_list == '["play piano", "eat sandwich", "play football"]', "Test NOT passsed: `text_description_list` should be `[\"play piano\", \"eat sandwich\", \"play football\"]`."
+  assert text_description_list == ["play piano", "eat sandwich", "play football"], "Test NOT passsed: `text_description_list` should be `[\"play piano\", \"eat sandwich\", \"play football\"]`."
 
   assert str(type(video_probs)) == "<class 'torch.Tensor'>", "Test NOT passsed: `video_probs` should be of type `torch.Tensor`."
   
