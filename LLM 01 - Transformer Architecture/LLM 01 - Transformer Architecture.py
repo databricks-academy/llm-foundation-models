@@ -71,7 +71,7 @@ print(word_embeddings)
 # Define a function to generate positional encodings
 def get_positional_encoding(max_seq_len, d_model):
     position = np.arange(max_seq_len)[:, np.newaxis]
-    div_term = np.exp(np.arange(0, d_model, 2) * -(np.log(10000.0) / d_model))
+    div_term = np.exp(np.arange(0, d_model, 2) * -(np.log(10000) / d_model))
     positional_encoding = np.zeros((max_seq_len, d_model))
     positional_encoding[:, 0::2] = np.sin(position * div_term)
     positional_encoding[:, 1::2] = np.cos(position * div_term)
