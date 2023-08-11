@@ -14,14 +14,14 @@ def __validate_libraries():
 def __install_libraries():
     global pip_command
     
-    specified_version = f"v3.0.76"
+    specified_version = f"v3.0.85"
     key = "dbacademy.library.version"
     version = spark.conf.get(key, specified_version)
 
     if specified_version != version:
         print("** Dependency Version Overridden *******************************************************************")
         print(f"* This course was built for {specified_version} of the DBAcademy Library, but it is being overridden via the Spark")
-        print(f"* configuration variable \"{key}\". The use of version v3.0.76 is not advised as we")
+        print(f"* configuration variable \"{key}\". The use of version v3.0.85 is not advised as we")
         print(f"* cannot guarantee compatibility with this version of the course.")
         print("****************************************************************************************************")
 
@@ -67,9 +67,9 @@ from dbacademy.dbhelper import DBAcademyHelper, Paths, CourseConfig, LessonConfi
 course_config = CourseConfig(course_code = "llmfm",
                              course_name = "llm-foundation-models",
                              data_source_name = "llm-foundation-models",
-                             data_source_version = "v01",
+                             data_source_version = "v01-raw",
                              install_min_time = "5 min",
-                             install_max_time = "20 min",
+                             install_max_time = "40 min",
                              remote_files = remote_files,
                              supported_dbrs = ["13.2.x-cpu-ml-scala2.12", "13.2.x-gpu-ml-scala2.12"],
                              expected_dbrs = "13.2.x-cpu-ml-scala2.12, 13.2.x-gpu-ml-scala2.12")

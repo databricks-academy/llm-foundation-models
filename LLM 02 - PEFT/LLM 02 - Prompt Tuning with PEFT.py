@@ -48,9 +48,8 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 model_name = "bigscience/bloomz-560m"
 
-tokenizer = AutoTokenizer.from_pretrained(model_name, cache_dir=DA.paths.datasets)
-
-foundation_model = AutoModelForCausalLM.from_pretrained(model_name, cache_dir=DA.paths.datasets)
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+foundation_model = AutoModelForCausalLM.from_pretrained(model_name)
 
 # COMMAND ----------
 
@@ -78,7 +77,7 @@ print(tokenizer.batch_decode(foundation_outputs, skip_special_tokens=True))
 
 from datasets import load_dataset
 
-data = load_dataset("Abirate/english_quotes", cache_dir=DA.paths.datasets)
+data = load_dataset("Abirate/english_quotes", cache_dir=DA.paths.datasets+"/datasets")
 
 data = data.map(lambda samples: tokenizer(samples["quote"]), batched=True)
 train_sample = data["train"].select(range(50))
@@ -121,6 +120,12 @@ from transformers import TrainingArguments
 import os
 
 output_directory = os.path.join(DA.paths.working_dir, "peft_outputs")
+
+if not os.path.exists(DA.paths.working_dir):
+    os.mkdir(DA.paths.working_dir)
+if not os.path.exists(output_directory):
+    os.mkdir(output_directory)
+
 training_args = TrainingArguments(
     output_dir=output_directory, # Where the model predictions and checkpoints will be written
     no_cuda=True, # This is necessary for CPU clusters. 
@@ -138,7 +143,7 @@ training_args = TrainingArguments(
 # MAGIC
 # MAGIC Specifically, we will be using `DataCollatorforLanguageModeling` which will additionally pad the inputs to the maximum length of a batch since the inputs can have variable lengths. Refer to [API docs here](https://huggingface.co/docs/transformers/main/en/main_classes/data_collator#transformers.DataCollatorForLanguageModeling).
 # MAGIC
-# MAGIC Note: This cell might take ~10 mins to train. On another hand, you might notice that this cells triggers a whole new MLflow run. [MLflow](https://mlflow.org/docs/latest/index.html) is an open source tool that helps to manage end-to-end machine learning lifecycle, including experiment tracking, ML code packaging, and model deployment. You can read more about [LLM tracking here](https://mlflow.org/docs/latest/llm-tracking.html).
+# MAGIC Note: This cell might take ~10 mins to train. **Decrease `num_train_epochs` above to speed up the training process.** On another hand, you might notice that this cells triggers a whole new MLflow run. [MLflow](https://mlflow.org/docs/latest/index.html) is an open source tool that helps to manage end-to-end machine learning lifecycle, including experiment tracking, ML code packaging, and model deployment. You can read more about [LLM tracking here](https://mlflow.org/docs/latest/llm-tracking.html).
 
 # COMMAND ----------
 
@@ -246,16 +251,19 @@ text_peft_model_path = os.path.join(output_directory, f"text_peft_model_{time_no
 text_trainer.model.save_pretrained(text_peft_model_path)
 
 # Load model 
-loaded_text_model = PeftModel.from_pretrained(foundation_model, 
-                                             text_peft_model_path, 
-                                             is_trainable=False)
+loaded_text_model = PeftModel.from_pretrained(
+    foundation_model, 
+    text_peft_model_path, 
+    is_trainable=False
+)
+
 # Generate output
 text_outputs = text_peft_model.generate(
     input_ids=input1["input_ids"], 
     attention_mask=input1["attention_mask"], 
     max_new_tokens=7, 
     eos_token_id=tokenizer.eos_token_id
-        )
+)
     
 print(tokenizer.batch_decode(text_outputs, skip_special_tokens=True))
 

@@ -248,9 +248,7 @@ similarity = sentence_similarity(sentence1, sentence2, model, word2id)
 similarity_score = similarity.item()
 
 # Print the result with a descriptive sentence
-print(f"The cosine similarity between the sentences {sentence1} and {sentence2} is {similarity_score:.2f}.")
-
-
+print(f"The cosine similarity between the sentences '{sentence1}' and '{sentence2}' is {similarity_score:.2f}.")
 
 # COMMAND ----------
 
@@ -309,8 +307,8 @@ import matplotlib.pyplot as plt
 
 # Load pre-trained BERT model and tokenizer
 model_name = "bert-base-uncased"
-model_bert = BertModel.from_pretrained(model_name, cache_dir=DA.paths.datasets)
-tokenizer = BertTokenizer.from_pretrained(model_name, cache_dir=DA.paths.datasets)
+model_bert = BertModel.from_pretrained(model_name, cache_dir=DA.paths.datasets+"/models")
+tokenizer = BertTokenizer.from_pretrained(model_name, cache_dir=DA.paths.datasets+"/models")
 
 # Define a list of words to plot
 words = [
@@ -484,8 +482,8 @@ dbTestQuestion1_4(sentence_q4a, sentence_q4b)
 from transformers import BertTokenizer, BertForMaskedLM
 
 # Load pre-trained model and tokenizer
-tokenizer = BertTokenizer.from_pretrained("bert-base-uncased", cache_dir=DA.paths.datasets)
-mlm_model = BertForMaskedLM.from_pretrained("bert-base-uncased", cache_dir=DA.paths.datasets)
+tokenizer = BertTokenizer.from_pretrained("bert-base-uncased", cache_dir=DA.paths.datasets+"/models")
+mlm_model = BertForMaskedLM.from_pretrained("bert-base-uncased", cache_dir=DA.paths.datasets+"/models")
 
 # Define a function to predict masked words
 def predict_masked_words(sentence, model, tokenizer):

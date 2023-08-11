@@ -10,7 +10,7 @@
 # MAGIC %md
 # MAGIC
 # MAGIC # Low-Rank Adaption (LoRA)
-# MAGIC This lab introduces how to apply low-rank adaptation (LoRA) to your model of choice using [Parameter-Efficient Fine-Tuning (PEFT) library developed by HuggingFace](https://huggingface.co/docs/peft/index). 
+# MAGIC This lab introduces how to apply low-rank adaptation (LoRA) to your model of choice using [Parameter-Efficient Fine-Tuning (PEFT) library developed by Hugging Face](https://huggingface.co/docs/peft/index). 
 # MAGIC
 # MAGIC
 # MAGIC ### ![Dolly](https://files.training.databricks.com/images/llm/dolly_small.png) Learning Objectives
@@ -38,10 +38,10 @@ from datasets import load_dataset
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 model_name = "bigscience/bloomz-560m"
-tokenizer = AutoTokenizer.from_pretrained(model_name, cache_dir=DA.paths.datasets)
-foundation_model = AutoModelForCausalLM.from_pretrained(model_name, cache_dir=DA.paths.datasets)
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+foundation_model = AutoModelForCausalLM.from_pretrained(model_name)
 
-data = load_dataset("Abirate/english_quotes", cache_dir=DA.paths.datasets)
+data = load_dataset("Abirate/english_quotes", cache_dir=DA.paths.datasets+"/datasets")
 data = data.map(lambda samples: tokenizer(samples["quote"]), batched=True)
 train_sample = data["train"].select(range(50))
 display(train_sample) 

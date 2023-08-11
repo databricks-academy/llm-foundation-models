@@ -10,7 +10,7 @@
 # MAGIC %md
 # MAGIC
 # MAGIC # Mixutre-of-Experts - Achieve Massively Scaled, but Efficient, LLM Peformance 
-# MAGIC In this lab we will explore how to build our own, simplified version of a mixture-of-expers (MoE) LLM system. While this method often involves a complex training and transformer configuration, we can see some of the benefits of this approach in a pseudo-MoE that we will build with some opensource LLMs. 
+# MAGIC In this lab we will explore how to build our own, simplified version of a mixture-of-experts (MoE) LLM system. While this method often involves a complex training and transformer configuration, we can see some of the benefits of this approach in a pseudo-MoE that we will build with some open source LLMs. 
 # MAGIC
 # MAGIC
 # MAGIC ### ![Dolly](https://files.training.databricks.com/images/llm/dolly_small.png) Learning Objectives
@@ -69,21 +69,21 @@ import torch.nn.functional as F
 
 # Load the GPT2 model and tokenizer
 # GPT2 is an autoregressive language model that uses transformer blocks and byte-pair encoding
-gpt2 = GPT2LMHeadModel.from_pretrained("gpt2-XL", cache_dir=DA.paths.datasets)
+gpt2 = GPT2LMHeadModel.from_pretrained("gpt2-XL", cache_dir=DA.paths.datasets+"/models")
 # The tokenizer is responsible for turning input data into the format that the model expects
-gpt2_tokenizer = GPT2Tokenizer.from_pretrained("gpt2-XL", cache_dir=DA.paths.datasets)
+gpt2_tokenizer = GPT2Tokenizer.from_pretrained("gpt2-XL", cache_dir=DA.paths.datasets+"/models")
 
 # Load the BERT model and tokenizer
 # BERT (Bidirectional Encoder Representations from Transformers) is a transformer-based machine learning technique for natural language processing pre-training
-bert = BertForSequenceClassification.from_pretrained("bert-base-uncased", cache_dir=DA.paths.datasets)
+bert = BertForSequenceClassification.from_pretrained("bert-base-uncased", cache_dir=DA.paths.datasets+"/models")
 # The tokenizer is responsible for turning input data into the format that the model expects
-bert_tokenizer = BertTokenizer.from_pretrained("bert-base-uncased", cache_dir=DA.paths.datasets)
+bert_tokenizer = BertTokenizer.from_pretrained("bert-base-uncased", cache_dir=DA.paths.datasets+"/models")
 
 # Load the T5 model and tokenizer
 # T5 (Text-to-Text Transfer Transformer) is a transformer model which treats every NLP problem as a text generation task
-t5 = T5ForConditionalGeneration.from_pretrained("t5-base", cache_dir=DA.paths.datasets)
+t5 = T5ForConditionalGeneration.from_pretrained("t5-base", cache_dir=DA.paths.datasets+"/models")
 # The tokenizer is responsible for turning input data into the format that the model expects
-t5_tokenizer = T5Tokenizer.from_pretrained("t5-base", cache_dir=DA.paths.datasets)
+t5_tokenizer = T5Tokenizer.from_pretrained("t5-base", cache_dir=DA.paths.datasets+"/models"+"/models")
 
 # Define the "hard gating" function
 # This function decides which model to use based on the length of the input

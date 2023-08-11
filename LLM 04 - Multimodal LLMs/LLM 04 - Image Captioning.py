@@ -108,11 +108,11 @@ class ProcessDataset(Dataset):
 
 from transformers import GPT2TokenizerFast, ViTFeatureExtractor
 
-tokenizer = GPT2TokenizerFast.from_pretrained("gpt2", cache_dir=DA.paths.datasets)
+tokenizer = GPT2TokenizerFast.from_pretrained("gpt2", cache_dir=DA.paths.datasets+"/models")
 # GPT2 doesn't have a pad token 
 tokenizer.pad_token = tokenizer.eos_token
 
-feature_extractor = ViTFeatureExtractor.from_pretrained("google/vit-base-patch16-224-in21k", cache_dir=DA.paths.datasets)
+feature_extractor = ViTFeatureExtractor.from_pretrained("google/vit-base-patch16-224-in21k", cache_dir=DA.paths.datasets+"/models")
 
 # COMMAND ----------
 
@@ -136,7 +136,7 @@ from transformers import VisionEncoderDecoderModel
 model = VisionEncoderDecoderModel.from_encoder_decoder_pretrained\
     (encoder_pretrained_model_name_or_path="google/vit-base-patch16-224-in21k", 
      decoder_pretrained_model_name_or_path="gpt2", 
-     tie_encoder_decoder=True)
+     tie_encoder_decoder=True, cache_dir=DA.paths.datasets+"/models")
 
 # COMMAND ----------
 
@@ -250,8 +250,8 @@ print(caption)
 
 from transformers import BlipProcessor, BlipForConditionalGeneration
 
-blip_processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-base", cache_dir=DA.paths.datasets)
-blip_model = BlipForConditionalGeneration.from_pretrained("Salesforce/blip-image-captioning-base", cache_dir=DA.paths.datasets)
+blip_processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-base", cache_dir=DA.paths.datasets+"/models")
+blip_model = BlipForConditionalGeneration.from_pretrained("Salesforce/blip-image-captioning-base", cache_dir=DA.paths.datasets+"/models")
 
 # conditional image captioning
 # in many of the initial vision-language models, adding a prefix text like below "a photo of " is crucial for models to do well

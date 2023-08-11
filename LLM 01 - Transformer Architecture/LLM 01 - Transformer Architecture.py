@@ -71,7 +71,7 @@ print(word_embeddings)
 # Define a function to generate positional encodings
 def get_positional_encoding(max_seq_len, d_model):
     position = np.arange(max_seq_len)[:, np.newaxis]
-    div_term = np.exp(np.arange(0, d_model, 2) * -(np.log(10000) / d_model))
+    div_term = np.exp(np.arange(0, d_model, 2) * -(np.log(10000.0) / d_model))
     positional_encoding = np.zeros((max_seq_len, d_model))
     positional_encoding[:, 0::2] = np.sin(position * div_term)
     positional_encoding[:, 1::2] = np.cos(position * div_term)
@@ -456,8 +456,8 @@ for i in range(10):  # Generate 10 words
 from transformers import GPT2LMHeadModel, GPT2Tokenizer
 
 # Load pre-trained models and tokenizers
-tokenizer_small = GPT2Tokenizer.from_pretrained("gpt2", cache_dir=DA.paths.datasets)
-model_small = GPT2LMHeadModel.from_pretrained("gpt2", cache_dir=DA.paths.datasets)
+tokenizer_small = GPT2Tokenizer.from_pretrained("gpt2", cache_dir=DA.paths.datasets+"/models")
+model_small = GPT2LMHeadModel.from_pretrained("gpt2", cache_dir=DA.paths.datasets+"/models")
 
 # COMMAND ----------
 
@@ -511,8 +511,8 @@ print("\nGPT-2 Small completed.")
 
 # COMMAND ----------
 
-tokenizer_large = GPT2Tokenizer.from_pretrained("gpt2-XL", cache_dir=DA.paths.datasets)
-model_large = GPT2LMHeadModel.from_pretrained("gpt2-XL", cache_dir=DA.paths.datasets)
+tokenizer_large = GPT2Tokenizer.from_pretrained("gpt2-XL", cache_dir=DA.paths.datasets+"/models")
+model_large = GPT2LMHeadModel.from_pretrained("gpt2-XL", cache_dir=DA.paths.datasets+"/models")
 
 # COMMAND ----------
 
