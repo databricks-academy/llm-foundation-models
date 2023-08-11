@@ -12,7 +12,7 @@
 # MAGIC
 # MAGIC * Name: **LLM: Foundation Models from the Ground Up**
 # MAGIC * Version:  **1.0.2**
-# MAGIC * Built On: **Aug 11, 2023 at 19:45:14 UTC**
+# MAGIC * Built On: **Aug 11, 2023 at 21:12:49 UTC**
 
 # COMMAND ----------
 

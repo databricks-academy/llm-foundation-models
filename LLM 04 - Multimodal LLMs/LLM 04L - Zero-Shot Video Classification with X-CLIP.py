@@ -10,7 +10,7 @@
 # MAGIC %md
 # MAGIC
 # MAGIC # Zero-Shot Video Classification
-# MAGIC In this lab, we are going to pass a video of choice to [X-CLIP](https://huggingface.co/docs/transformers/model_doc/xclip) and ask X-CLIP to assign probabilities to the provided text description. This model developed by [Ni et al 2022](https://arxiv.org/abs/2208.02816) aims to extend OpenAI's CLIP model that's focused on image-related tasks. From HuggingFace's documentation:
+# MAGIC In this lab, we are going to pass a video of choice to [X-CLIP](https://huggingface.co/docs/transformers/model_doc/xclip) and ask X-CLIP to assign probabilities to the provided text description. This model developed by [Ni et al 2022](https://arxiv.org/abs/2208.02816) aims to extend OpenAI's CLIP model that's focused on image-related tasks. From Hugging Face's documentation:
 # MAGIC
 # MAGIC >The model consists of a text encoder, a cross-frame vision encoder, a multi-frame integration Transformer, and a video-specific prompt generator. 
 # MAGIC
@@ -18,7 +18,7 @@
 # MAGIC 1. You will learn how to load a video from YouTube and do minor processing on the video for X-CLIP 
 # MAGIC 1. Use X-CLIP to assign probabilities to text descriptions
 # MAGIC
-# MAGIC DISCLAIMER: The majority of this notebook's code is borrowed from HuggingFace's Tutorial GitHub Repo, specifically the["Transformers-Tutorials/X-CLIP"](https://github.com/NielsRogge/Transformers-Tutorials/blob/master/X-CLIP/Zero_shot_classify_a_YouTube_video_with_X_CLIP.ipynb) notebook. 
+# MAGIC DISCLAIMER: The majority of this notebook's code is borrowed from Hugging Face's Tutorial GitHub Repo, specifically the["Transformers-Tutorials/X-CLIP"](https://github.com/NielsRogge/Transformers-Tutorials/blob/master/X-CLIP/Zero_shot_classify_a_YouTube_video_with_X_CLIP.ipynb) notebook. 
 
 # COMMAND ----------
 
@@ -27,7 +27,11 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install pytube==15.0.0 decord==0.6.0 openai==0.27.8
+# MAGIC %pip install decord==0.6.0 openai==0.27.8 pytube==15.0.0
+
+# COMMAND ----------
+
+# MAGIC %run ../Includes/pytube_patch
 
 # COMMAND ----------
 
@@ -37,12 +41,6 @@
 # COMMAND ----------
 
 # MAGIC %run ../Includes/Classroom-Setup
-
-# COMMAND ----------
-
-# working_dir = f"{DA.paths.working_dir.replace('/dbfs/', 'dbfs:/')}/tmp"
-# dbutils.fs.mkdirs(working_dir)
-# local_working_dir = working_dir.replace('dbfs:/', '/dbfs/')
 
 # COMMAND ----------
 
@@ -56,7 +54,7 @@
 from pytube import YouTube
 
 # a video of piano performance 
-youtube_url = "https://www.youtube.com/watch?v=LqoV4ZW7xTA"
+youtube_url = "https://www.youtube.com/watch?v=-xKM3mGt2pE"
 yt = YouTube(youtube_url)
 
 streams = yt.streams.filter(file_extension="mp4")
