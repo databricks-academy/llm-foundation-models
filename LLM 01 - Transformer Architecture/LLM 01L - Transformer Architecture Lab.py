@@ -383,7 +383,7 @@ embeddings = []
 for word in words:
     inputs = tokenizer(word, return_tensors='pt')
     with torch.no_grad():
-        outputs = model(**inputs)
+        outputs = <FILL_IN>
     embeddings.append(outputs.last_hidden_state[0, 0, :].numpy())
 
 # Use PCA to reduce the dimensionality of the embeddings to 2
