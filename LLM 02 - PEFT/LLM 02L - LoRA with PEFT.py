@@ -232,7 +232,7 @@ outputs = peft_model.generate(
     input_ids=<FILL_IN>, 
     attention_mask=<FILL_IN>, 
     max_new_tokens=<FILL_IN>, 
-    eos_token_id=tokenizer.eos_id
+    eos_token_id=tokenizer.eos_token_id
     )
 print(tokenizer.batch_decode(<FILL_IN>, skip_special_tokens=True))
 
