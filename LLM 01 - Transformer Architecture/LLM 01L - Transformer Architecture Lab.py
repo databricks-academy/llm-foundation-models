@@ -359,7 +359,7 @@ def count_parameters(model):
 # Use different parameters to see the effects on the overall model size. 
 # Create a Transformer Encoder with different hyperparameters
 new_model = TransformerEncoder("<FILL_IN>")
-print(f"The model has {count_parameters(model):,} trainable parameters, compared to the 21,986,304 of the original model")
+print(f"The model has {count_parameters(new_model):,} trainable parameters, compared to the 21,986,304 of the original model")
 
 # COMMAND ----------
 
@@ -576,7 +576,7 @@ dbTestQuestion1_5(sentence_q5)
 # TODO
 # Define a sentence in French with a masked word
 sentence_q6 = "<FILL_IN>"
-print(predict_masked_words(sentence, mlm_model, tokenizer))
+print(predict_masked_words(sentence_q6, mlm_model, tokenizer))
 
 # COMMAND ----------
 
@@ -616,7 +616,7 @@ dbTestQuestion1_7(sentence_q7a, sentence_q7b)
 # TODO
 # Define a sentence that makes sense only in a specific cultural context
 sentence_q8 = "<FILL_IN>"
-print(predict_masked_words(sentence, mlm_model, tokenizer))
+print(predict_masked_words(sentence_q8, mlm_model, tokenizer))
 
 # COMMAND ----------
 
