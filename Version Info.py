@@ -11,8 +11,8 @@
 # MAGIC # Project Information
 # MAGIC
 # MAGIC * Name: **LLM: Foundation Models from the Ground Up**
-# MAGIC * Version:  **1.0.2**
-# MAGIC * Built On: **Aug 11, 2023 at 21:12:49 UTC**
+# MAGIC * Version:  **1.1.0**
+# MAGIC * Built On: **Oct 16, 2023 at 15:48:41 UTC**
 
 # COMMAND ----------
 
@@ -43,7 +43,7 @@
 # MAGIC
 # MAGIC To ensure that all labs execute as expected, Databricks Academy requires that the content provided be executed against a cluster configured with a specific runtime. Typically this is an LTS (long-term supported) version.
 # MAGIC
-# MAGIC This course is tested against and requires one of the following DBRs (Databricks Runtime): **13.2.x-cpu-ml-scala2.12, 13.2.x-gpu-ml-scala2.12**.
+# MAGIC This course is tested against and requires one of the following DBRs (Databricks Runtime): **13.2.x-cpu-ml-scala2.12, 13.2.x-gpu-ml-scala2.12, 13.3.x-cpu-ml-scala2.12, 13.3.x-gpu-ml-scala2.12**.
 # MAGIC
 # MAGIC For more current information, please <a href="https://files.training.databricks.com/static/troubleshooting.html#spark-version" target="_blank">Troubleshooting the Spark Version</a>
 

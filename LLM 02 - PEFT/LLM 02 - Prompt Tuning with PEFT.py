@@ -34,13 +34,13 @@
 # MAGIC
 # MAGIC [Auto Classes](https://huggingface.co/docs/transformers/main/en/model_doc/auto#auto-classes) helps you automatically retrieve the relevant model and tokenizers, given the pre-trained models you are interested in using. 
 # MAGIC
-# MAGIC Causal language modeling refers to the decoding process, where the model predicts the next token based on only the tokens on the left. The model cannot see the future tokens, unlike masked language models that have full access to tokens bidirectionally. A canonical example of a causal language model is GPT-2. You also hear causal language models being described as autoregresssive as well. 
+# MAGIC Causal language modeling refers to the decoding process, where the model predicts the next token based on only the tokens on the left. The model cannot see the future tokens, unlike masked language models that have full access to tokens bidirectionally. A canonical example of a causal language model is GPT-2. You also hear causal language models being described as autoregressive as well. 
 # MAGIC
 # MAGIC API docs:
 # MAGIC * [AutoTokenizer](https://huggingface.co/docs/transformers/main/en/model_doc/auto#transformers.AutoTokenizer)
 # MAGIC * [AutoModelForCausalLM](https://huggingface.co/docs/transformers/main/en/model_doc/auto#transformers.AutoModelForCausalLM)
 # MAGIC
-# MAGIC In this demo, we will be using `bigscience/bloomz-560m` as our **foundation** causal LM to generate text. You can read more about [`bloomz` model here](https://huggingface.co/bigscience/bloomz). It was trained on [multi-lingual dataset](https://huggingface.co/datasets/bigscience/xP3), spanning 46 languages and 13 programming langauges. The dataset covers a wide range of NLP tasks, including Q/A, title generation, text classification.
+# MAGIC In this demo, we will be using `bigscience/bloomz-560m` as our **foundation** causal LM to generate text. You can read more about [`bloomz` model here](https://huggingface.co/bigscience/bloomz). It was trained on [multi-lingual dataset](https://huggingface.co/datasets/bigscience/xP3), spanning 46 languages and 13 programming languages. The dataset covers a wide range of NLP tasks, including Q/A, title generation, text classification.
 
 # COMMAND ----------
 
@@ -110,7 +110,7 @@ print(peft_model.print_trainable_parameters())
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC That's the beauty of PEFT! It allows us to drastically reduce the number of trainable parameters. Now, we can proceed with using [HuggingFace's `Trainer` class](https://huggingface.co/docs/transformers/main/en/main_classes/trainer#trainer) and its [`TrainingArugments` to define our fine-tuning configurations](https://huggingface.co/docs/transformers/main/en/main_classes/trainer#transformers.TrainingArguments). 
+# MAGIC That's the beauty of PEFT! It allows us to drastically reduce the number of trainable parameters. Now, we can proceed with using [HuggingFace's `Trainer` class](https://huggingface.co/docs/transformers/main/en/main_classes/trainer#trainer) and its [`TrainingArguments` to define our fine-tuning configurations](https://huggingface.co/docs/transformers/main/en/main_classes/trainer#transformers.TrainingArguments). 
 # MAGIC
 # MAGIC The `Trainer` class provides user-friendly abstraction to leverage PyTorch under the hood to conduct training. 
 
@@ -148,6 +148,11 @@ training_args = TrainingArguments(
 # COMMAND ----------
 
 from transformers import Trainer, DataCollatorForLanguageModeling
+import mlflow
+
+# Tell MLflow Tracking to use this explicit experiment path,
+# which is located on the left hand sidebar under Machine Learning -> Experiments 
+mlflow.set_experiment(f"/Users/{DA.username}/LLM 02 - Prompt Tuning with PEFT")
 
 trainer = Trainer(
     model=peft_model, # We pass in the PEFT version of the foundation model, bloomz-560M

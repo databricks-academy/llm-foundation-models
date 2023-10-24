@@ -11,7 +11,7 @@
 # MAGIC
 # MAGIC # Diving into the Transformer - Building your own Foundation LLM
 # MAGIC
-# MAGIC This lesson introduces the underlying sturcture of transformers from token management to the layers in a decoder, to comparing smaller and larger models. We will build up all of the steps needed to create our foundation model before training. You will see how the layers are constructed, and how the next word is chosen. 
+# MAGIC This lesson introduces the underlying structure of transformers from token management to the layers in a decoder, to comparing smaller and larger models. We will build up all of the steps needed to create our foundation model before training. You will see how the layers are constructed, and how the next word is chosen. 
 # MAGIC
 # MAGIC ### ![Dolly](https://files.training.databricks.com/images/llm/dolly_small.png) Learning Objectives
 # MAGIC 1. Identify the key structures and functions in decoder transformers
@@ -144,7 +144,7 @@ print(final_embeddings)
 
 # MAGIC %md # Section 2: Building Our Own Decoder From Scratch
 # MAGIC
-# MAGIC Let's now build a decoder transfomer. We'll build up the code from scratch and build a single layer transformer.
+# MAGIC Let's now build a decoder transformer. We'll build up the code from scratch and build a single layer transformer.
 
 # COMMAND ----------
 

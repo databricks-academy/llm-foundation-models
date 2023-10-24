@@ -359,7 +359,7 @@ def count_parameters(model):
 # Use different parameters to see the effects on the overall model size. 
 # Create a Transformer Encoder with different hyperparameters
 new_model = TransformerEncoder("<FILL_IN>")
-print(f"The model has {count_parameters(model):,} trainable parameters, compared to the 21,986,304 of the original model")
+print(f"The model has {count_parameters(new_model):,} trainable parameters, compared to the 21,986,304 of the original model")
 
 # COMMAND ----------
 

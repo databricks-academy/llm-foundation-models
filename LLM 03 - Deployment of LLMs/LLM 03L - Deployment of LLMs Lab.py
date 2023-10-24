@@ -9,7 +9,7 @@
 
 # MAGIC %md
 # MAGIC
-# MAGIC # Mixutre-of-Experts - Achieve Massively Scaled, but Efficient, LLM Peformance 
+# MAGIC # Mixture-of-Experts - Achieve Massively Scaled, but Efficient, LLM Performance 
 # MAGIC In this lab we will explore how to build our own, simplified version of a mixture-of-experts (MoE) LLM system. While this method often involves a complex training and transformer configuration, we can see some of the benefits of this approach in a pseudo-MoE that we will build with some open source LLMs. 
 # MAGIC
 # MAGIC
@@ -110,10 +110,10 @@ def soft_gating_function(input):
 
 # Define the pseudo MoE model
 # This function uses the gating function to decide which model(s) to use for a given input
-def pseudo_moe_model(input, gating_function):
+def pseudo_moe_model(input, gating_function, hard_fn=hard_gating_function, soft_fn=soft_gating_function):
     if gating_function == "hard":
         # If the hard gating function is used, only one model is used for a given input
-        model_name, model, tokenizer = hard_gating_function(input)
+        model_name, model, tokenizer = hard_fn(input)
         inputs = tokenizer(input, return_tensors="pt")
         if model_name == "t5":
             # For T5, create a decoder input sequence consisting of only the <BOS> token
@@ -127,7 +127,7 @@ def pseudo_moe_model(input, gating_function):
         return model_name, decoded_output
     else:  # soft gating
         # If the soft gating function is used, all models are used to a certain extent to generate the output
-        models = soft_gating_function(input)
+        models = soft_fn(input)
         outputs = []
         for model_name, (model, tokenizer, weight) in models.items():
             inputs = tokenizer(input, return_tensors="pt")
@@ -180,6 +180,9 @@ from textblob import TextBlob
 def sentiment_based_gating_function(input):
     <FILL_IN>
 
+test_input = "I am so happy today!"
+print(pseudo_moe_model(test_input, gating_function="hard", hard_fn=sentiment_based_gating_function))
+
 # 2. Add a new expert
 
 from transformers import DistilBertForSequenceClassification, DistilBertTokenizer
@@ -195,7 +198,7 @@ def updated_gating_function(input):
 # 3. Test the updated pseudo MoE model
 
 test_input = "<FILL_IN>"
-print(pseudo_moe_model(test_input, gating_function='hard'))
+print(pseudo_moe_model(test_input, gating_function='hard', hard_fn=updated_gating_function))
 
 # COMMAND ----------
 

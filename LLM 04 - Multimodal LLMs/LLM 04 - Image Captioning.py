@@ -200,6 +200,10 @@ trainer = Trainer(
 
 # COMMAND ----------
 
+import mlflow
+
+mlflow.set_experiment(f"/Users/{DA.username}/LLM 04 - Image Captioning")
+
 trainer.train()
 
 # COMMAND ----------
@@ -229,7 +233,7 @@ print(caption)
 # MAGIC %md
 # MAGIC Hmm, you can see that the caption is not really relevant to the image above. What went wrong? There are two possible reasons: 
 # MAGIC - Parts of our text decoder weights were not loaded from the pretrained checkpoints. So the best approach would have been to train the decoder separately on the training dataset first and load the fine-tuned decoder. 
-# MAGIC - Our image-captioning model needs more fine-tuning time! Try increasing the # of epochs, # of training data samples, and adjust other model hyperaparameters if you'd like. 
+# MAGIC - Our image-captioning model needs more fine-tuning time! Try increasing the # of epochs, # of training data samples, and adjust other model hyperparameters if you'd like. 
 # MAGIC
 # MAGIC But now you learned how to plug in your own transformer-based models and connect them as an encoder-decoder model! It would definitely be much easier if we use an existing image captioning model instead. Let's do that next!  
 

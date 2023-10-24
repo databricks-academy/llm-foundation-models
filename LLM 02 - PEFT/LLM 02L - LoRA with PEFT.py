@@ -150,6 +150,11 @@ dbTestQuestion2_2(peft_model)
 import transformers
 from transformers import TrainingArguments, Trainer
 import os
+import mlflow
+
+# Tell MLflow Tracking to use this explicit experiment path,
+# which is located on the left hand sidebar under Machine Learning -> Experiments 
+mlflow.set_experiment(f"/Users/{DA.username}/LLM 02L - LoRA with PEFT")
 
 output_directory = os.path.join(DA.paths.working_dir, "peft_lab_outputs")
 training_args = TrainingArguments(

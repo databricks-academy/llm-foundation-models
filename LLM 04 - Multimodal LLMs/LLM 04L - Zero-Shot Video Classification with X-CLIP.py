@@ -175,7 +175,7 @@ dbTestQuestion4_2(model_name)
 # MAGIC %md
 # MAGIC ## Question 3 
 # MAGIC
-# MAGIC We will provide a list of three text descriptions and ask the model to assign probabitilies to each of them. 
+# MAGIC We will provide a list of three text descriptions and ask the model to assign probabilities to each of them. 
 # MAGIC
 # MAGIC Let's use `text_description_list = ["play piano", "eat sandwich", "play football"]` 
 # MAGIC
