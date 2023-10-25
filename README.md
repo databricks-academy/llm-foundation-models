@@ -54,12 +54,13 @@ Note: this is the second course in the two-part series. For the first installmen
 
 2. This courseware has been tested on [Databricks Runtime 13.3 LTS for Machine Learning]([url](https://docs.databricks.com/en/release-notes/runtime/13.3lts-ml.html)). If you do not have access to a 13.3 LTS ML Runtime cluster, you will need to install many additional libraries (as the ML Runtime pre-installs many commonly used machine learning packages), and this courseware is not guaranteed to run. 
     
-    <img width="400" alt="cluster" src="https://files.training.databricks.com/images/llm/m1_3_cluster_settings.png">
+    <img width="400" alt="cluster" src="https://github.com/databricks-academy/llm-foundation-models/assets/6416014/527dff8d-7b5f-41f9-a11e-a3f21ce08176">
 
     
     For Module 1 and 3 notebooks, you can run them on i3.xlarge just fine. We recommend `i3.2xlarge` for Module 2 and 4 notebooks. 
 
-    <img width="400" alt="cpu_settings" src="https://files.training.databricks.com/images/llm/m2_4_cluster_settings.png">
+    <img width="400" alt="cpu_settings" src="https://github.com/databricks-academy/llm-foundation-models/assets/6416014/c54d9de0-daed-4146-940c-d074d560cf6e">
+
    
 </details>
 
