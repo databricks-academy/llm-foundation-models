@@ -181,7 +181,7 @@ training_args = TrainingArguments(
     do_train=True,
     num_train_epochs=TRAIN_EPOCHS, # number of passes to see the entire dataset 
     overwrite_output_dir=True,
-    no_cuda=True, # Not using GPU
+    no_cuda=NO_CUDA, # Not using GPU when on CPU-only cluster
     dataloader_pin_memory=False # this specifies whether you want to pin memory in data loaders or not
 )
 
@@ -224,7 +224,7 @@ display(test_image)
 
 # COMMAND ----------
 
-caption = tokenizer.decode(trainer.model.generate(feature_extractor(test_image, return_tensors="pt").pixel_values)[0])
+caption = tokenizer.decode(trainer.model.to("cpu").generate(feature_extractor(test_image, return_tensors="pt").pixel_values)[0])
 print("--"*20)
 print(caption)
 

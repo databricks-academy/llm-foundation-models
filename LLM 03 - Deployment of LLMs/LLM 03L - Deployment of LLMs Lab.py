@@ -33,10 +33,6 @@
 
 # COMMAND ----------
 
-import torch
-
-# COMMAND ----------
-
 # MAGIC %md
 # MAGIC # Section 1: An Overview of Mixture-of-Experts (MoE)
 # MAGIC Mixture-of-Experts (MoE) is a machine learning architecture that incorporates the idea of "divide and conquer" to solve complex problems. In this approach, the model is composed of multiple individual models, referred to as "experts", each of which specializes in some aspect of the data. The model also includes a "gating" function that determines which expert or combination of experts to consult for a given input.
@@ -64,6 +60,7 @@ import torch
 # Import the necessary libraries
 # transformers is a state-of-the-art library for Natural Language Processing tasks, providing a wide range of pre-trained models
 from transformers import GPT2LMHeadModel, GPT2Tokenizer, BertForSequenceClassification, BertTokenizer, T5ForConditionalGeneration, T5Tokenizer
+import torch
 # torch.nn.functional provides functions that don't have any parameters, such as activation functions, loss functions etc.
 import torch.nn.functional as F
 

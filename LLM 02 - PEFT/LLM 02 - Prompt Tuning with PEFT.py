@@ -128,7 +128,7 @@ if not os.path.exists(output_directory):
 
 training_args = TrainingArguments(
     output_dir=output_directory, # Where the model predictions and checkpoints will be written
-    no_cuda=True, # This is necessary for CPU clusters. 
+    no_cuda=NO_CUDA, # This is necessary for CPU clusters. 
     auto_find_batch_size=True, # Find a suitable batch size that will fit into memory automatically 
     learning_rate= 3e-2, # Higher learning rate than full fine-tuning
     num_train_epochs=5 # Number of passes to go through the entire fine-tuning dataset 
@@ -187,7 +187,7 @@ trainer.model.save_pretrained(peft_model_path)
 
 from peft import PeftModel
 
-loaded_model = PeftModel.from_pretrained(foundation_model, 
+loaded_model = PeftModel.from_pretrained(foundation_model.to("cpu"), 
                                          peft_model_path, 
                                          is_trainable=False)
 
@@ -257,13 +257,13 @@ text_trainer.model.save_pretrained(text_peft_model_path)
 
 # Load model 
 loaded_text_model = PeftModel.from_pretrained(
-    foundation_model, 
+    foundation_model.to("cpu"), 
     text_peft_model_path, 
     is_trainable=False
 )
 
 # Generate output
-text_outputs = text_peft_model.generate(
+text_outputs = loaded_text_model.generate(
     input_ids=input1["input_ids"], 
     attention_mask=input1["attention_mask"], 
     max_new_tokens=7, 

@@ -5,10 +5,12 @@
 
 DA = DBAcademyHelper(course_config, lesson_config)  # Create the DA object
 DA.reset_lesson()                                   # Reset the lesson to a clean state
-DA.init()                                           # Performs basic initialization including creating schemas and catalogs
+DA.init()                                           # Performs basic intialization including creating schemas and catalogs
 
 DA.paths.working_dir = DA.paths.to_vm_path(DA.paths.working_dir)
 DA.paths.datasets = DA.paths.to_vm_path(DA.paths.datasets)
+
+DA.init_mlflow_as_job()
 
 # COMMAND ----------
 
@@ -24,8 +26,11 @@ print("\nThe models developed or used in this course are for demonstration and l
 
 import torch
 
+TORCH_DEVICE = "cpu"
+NO_CUDA = True
 if torch.cuda.is_available():
-    torch.device("cuda")
-else:
-    torch.device("cpu")
+    NO_CUDA = False
+    TORCH_DEVICE = "cuda"
+
+torch.device(TORCH_DEVICE)
 
